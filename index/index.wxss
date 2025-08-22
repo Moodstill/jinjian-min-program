@@ -1,0 +1,100 @@
+page {
+    color: #333;
+}
+
+.devices_summary {
+    margin-top: 30px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.device_list {
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.device_item {
+    border: 1px solid #EEE;
+    padding: 10px;
+    color: #666;
+    margin: 10px 0;
+}
+
+.device_item_hover {
+    background-color: rgba(0, 0, 0, .1);
+}
+
+.connected_info {
+    padding: 10px;
+    padding-bottom: 20px;
+    font-size: 14px;
+}
+
+.connected_info_button {
+    margin-top: 10px;
+    display: flex;
+    gap: 0 10px;
+}
+
+.connected_info_button button {
+    flex: 1;
+    padding: 0;
+}
+
+.dialog {
+    position: fixed;
+    width: 80%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    background-color: #fff;
+    border-radius: 10rpx;
+}
+
+.dialog-hd {
+    line-height: 100rpx;
+    text-align: center;
+    font-size: 34rpx;
+    border-bottom: 1px solid #ccc;
+}
+
+.qrcode {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: -2;
+}
+
+.dialog-bd input {
+    border: 1px solid #ccc;
+    width: 80%;
+    margin: 50rpx auto;
+    display: block;
+    padding: 5px;
+    border-radius: 2px;
+}
+
+.dialog-btn {
+    border-top: 1px solid #ccc;
+    line-height: 100rpx;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dialog-btn view {
+    flex: 1;
+    text-align: center;
+}
+
+.dialog-btn view {
+    border-right: 1px solid #ccc;
+}
+
+.dialog-btn view:first-child {
+    color: red;
+}
+
+.dialog-btn view:last-child {
+    border-right: 0;
+}
