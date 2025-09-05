@@ -1,22 +1,35 @@
 {
-    "libVersion": "3.9.1",
-    "projectname": "%E8%93%9D%E7%89%99",
-    "setting": {
-        "urlCheck": true,
-        "coverView": false,
-        "lazyloadPlaceholderEnable": false,
-        "skylineRenderEnable": false,
-        "preloadBackgroundData": false,
-        "autoAudits": false,
-        "useApiHook": true,
-        "useApiHostProcess": true,
-        "showShadowRootInWxmlPanel": false,
-        "useStaticServer": false,
-        "useLanDebug": false,
-        "showES6CompileOption": false,
-        "compileHotReLoad": true,
-        "checkInvalidKey": true,
-        "ignoreDevUnusedFiles": true,
-        "bigPackageSizeSupport": false
-    }
+	"libVersion": "3.9.1",
+	"projectname": "%E8%93%9D%E7%89%99",
+	"setting": {
+		"urlCheck": true,
+		"coverView": false,
+		"lazyloadPlaceholderEnable": false,
+		"skylineRenderEnable": false,
+		"preloadBackgroundData": false,
+		"autoAudits": false,
+		"useApiHook": true,
+		"useApiHostProcess": true,
+		"showShadowRootInWxmlPanel": false,
+		"useStaticServer": false,
+		"useLanDebug": false,
+		"showES6CompileOption": false,
+		"compileHotReLoad": true,
+		"checkInvalidKey": true,
+		"ignoreDevUnusedFiles": true,
+		"bigPackageSizeSupport": false
+	},
+	"condition": {
+		"miniprogram": {
+			"list": [
+				{
+					"name": "index/index",
+					"pathName": "index/index",
+					"query": "",
+					"scene": null,
+					"launchMode": "default"
+				}
+			]
+		}
+	}
 }

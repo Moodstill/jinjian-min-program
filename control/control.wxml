@@ -1,0 +1,107 @@
+<view class="flex-col page">
+	<view class="flex-col group {{parent.openBluetoothAdapter?'':'disabled'}}">
+		<view class="flex-col group_3">
+			<view class="flex-row justify-between items-center self-stretch group_4">
+				<view class="flex-row items-end" bind:tap="remark">
+					<text class="text">{{parent.userMap.self||parent.device.name||"电动车"}}</text>
+					<image class="ml-4 shrink-0 image_4" src="/images/c519761d37adad7a6641ec6e8adf1c61.png" />
+				</view>
+			</view>
+			<text class="self-start font text_2">设备蓝牙MAC：{{parent.device.deviceId||"00:00:00:00:00:00"}}</text>
+			<text class="self-start font text_3">手机蓝牙MAC：{{parent.user.deviceId||"00:00:00:00:00:00"}}</text>
+			<view class="flex-row justify-between">
+				<view class="flex-col" style="gap:20rpx;margin-top:30rpx;">
+					<view class="flex-row justify-start items-center btn">
+						<text class="font_2 text_6">信号强度：</text>
+						<canvas type="2d" id="dbm3" style="flex-shrink: 0; width:54px; height:14px;"></canvas>
+						<text style="margin-left:20rpx;color:#fff">{{parent.device.dbm||0}}dBm</text>
+					</view>
+					<view class="flex-row items-center btn">
+						<text class="font_2 text_5">设备连接</text>
+						<view class="ml-4 shrink-0 section_5" style="background: {{parent.user.deviceId?'#00ff8c':'#ccc'}};"></view>
+					</view>
+					<view class="flex-row justify-start items-center btn">
+						<text class="font_2 text_6">用户身份：</text>
+						<text class="font_2 text_6" style="color:{{parent.user.identity?'#f7d061':''}}">{{parent.user.identity?"车主":"非车主"}}</text>
+					</view>
+					<view class="flex-row justify-start items-center btn">
+						<text class="font_2 text_6">用户状态：</text>
+						<text class="font_2 text_6" style="color:{{parent.user.state?'red':'green'}}">{{parent.user.state?"禁用":"启用"}}</text>
+					</view>
+					<view class="flex-row justify-start items-center btn">
+						<text class="font_2 text_6">电池电压：</text>
+						<view class="flex-row section_6">
+							<text class="font_3">{{parent.setting.voltage||0}}</text>
+							<text class="ml-6 font_3">V</text>
+						</view>
+					</view>
+				</view>
+				<view class="flex-col" style="gap:20rpx">
+					<view class="flex-row items-center section_7 btn" bind:tap="findBuletooth">
+						<text class="font_2 text_4">{{parent.user.deviceId?"断开":"蓝牙"}}连接</text>
+						<image class="ml-10 shrink-0 image_6" src="/images/link.png" />
+					</view>
+					<view class="flex-row items-center section_7 btn" bind:tap="scanCode">
+						<text class="font_2 text_4">蓝牙配对</text>
+						<image class="ml-10 shrink-0 image_6" src="/images/61a725837d2bb3ad30a14275613d7fe7.png" />
+					</view>
+					<view class="{{(!parent.openBluetoothAdapter || !parent.user.deviceId)?'disabled':''}}">
+						<view class="flex-row items-center section_7 btn" bind:tap="getState">
+							<text class="font_2 text_7">状态刷新</text>
+							<image class="shrink-0 image_7 ml-19" src="/images/ef1ab995f407b7bbc2eb65fde9b5333d.png" />
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+		<view class="flex-col section_8 {{parent.user.state!==0?'disabled':''}}">
+			<view class="flex-row equal-division">
+				<view class="flex-col items-center group_8 equal-division-item btn" bind:tap="control" data-control="{{[0,parent.setting.fortify?2:1,0,0]}}">
+					<view class="image-icon" style="background:{{parent.setting.fortify?'#0D7AFF':'#fff'}};">
+						<image class="image_8" src="/images/clock-active.png" wx:if="{{parent.setting.fortify}}" />
+						<image class="image_8" src="/images/clock.png" wx:else />
+					</view>
+					<text class="font_4 text_8 mt-9">设防</text>
+				</view>
+				<view class="flex-col items-center group_8 equal-division-item btn" bind:tap="control" data-control="{{[0,0,0,1]}}">
+					<view class="image-icon" style="background:{{closeTouch==='find'?'#0D7AFF':'#fff'}};">
+						<image class="image_8" src="/images/find-active.png" wx:if="{{closeTouch==='find'}}" />
+						<image class="image_8" src="/images/find.png" wx:else="" />
+					</view>
+					<text class="font_4 text_8 mt-9">寻车</text>
+				</view>
+				<view class="flex-col items-center group_8 equal-division-item btn" bind:tap="control" data-control="{{[0,0,parent.setting.site?2:1,0]}}">
+					<view class="image-icon" style="background:{{parent.setting.site?'#0D7AFF':'#fff'}};">
+						<image class="image_8" src="/images/site-active.png" wx:if="{{parent.setting.site}}" />
+						<image class="image_8" src="/images/site.png" wx:else />
+					</view>
+					<text class="mt-10 font_4 text_8">座桶</text>
+				</view>
+			</view>
+			<view class="mt-66 items-center flex-col" wx:if="{{isopening}}">
+				<view class="flex-row justify-center items-center image-wrapper_2 btn" style="background:{{closeTouch==='close'?'#324155':'#000'}}">
+					<image class="image_9 loading" src="/images/loading.png" />
+				</view>
+				<text class="mt-10 font_2 text_9" style="opacity: 0;">操作中</text>
+			</view>
+			<view class="mt-66 flex-col items-center" wx:elif="{{parent.setting.open}}" bind:touchstart="closeTouchStart" bind:touchend="closeTouchEnd" bind:longpress="closeDevice">
+				<view class="flex-row justify-center items-center image-wrapper_2 btn" style="background:{{closeTouch==='close'?'#324155':'#000'}}">
+					<image class="image_9" src="/images/2.png" />
+				</view>
+				<text class="mt-10 font_2 text_9">长按关机</text>
+			</view>
+			<view class="mt-66 items-center flex-col" wx:else>
+				<view class="touch-control btn" bind:touchstart="touchstart" bind:touchmove="touchmove" bind:touchend="touchend">
+					<view class="touch-control-box flex-row justify-between items-center ">
+						<view class="touch-control-icon" style="transform: translateX({{translateX}}px);">
+							<image src="/images/2.png" />
+						</view>
+						<text style="opacity: {{translateX>0?.5:1}};">滑动启动</text>
+						<image style="opacity: {{translateX>0?.5:1}};margin-right: 40rpx;" src="/images/1.png" />
+					</view>
+				</view>
+				<text class="mt-10 font_2 text_9" style="opacity: 0;">滑动启动</text>
+			</view>
+		</view>
+	</view>
+</view>

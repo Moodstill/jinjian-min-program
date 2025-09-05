@@ -1,0 +1,67 @@
+<view class="flex-col group_5">
+	<view class="flex-row justify-between items-center section_5 view">
+		<view class="flex-row items-center">
+			<text class="font_2 text_4">感应解锁</text>
+			<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="0" src="/images/help.png" />
+		</view>
+		<switch checked="{{setting.inductiveUnlocking}}" color="#0D7AFF" bindchange="inductiveUnlocking" />
+	</view>
+	<view class="flex-row justify-between items-center section_5 view_2">
+		<view class="flex-row items-center">
+			<text class="font_2 text_8">静默防盗</text>
+			<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="1" src="/images/help.png" />
+		</view>
+		<switch checked="{{setting.silentAntiTheft}}" color="#0D7AFF" bindchange="silentAntiTheft" />
+	</view>
+	<view class="flex-col section_6">
+		<view class="flex-row items-center group_6">
+			<text class="font_2">感应距离</text>
+			<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="2" src="/images/help.png" />
+		</view>
+		<view class="flex-row justify-between items-center section_7">
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===0?'active':''}}" bind:tap="unlockDistance" data-value="0"><text>近</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===1?'active':''}}" bind:tap="unlockDistance" data-value="1"><text>中</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===2?'active':''}}" bind:tap="unlockDistance" data-value="2"><text>远</text></view>
+		</view>
+	</view>
+	<view class="flex-col section_8">
+		<view class="flex-row justify-between items-center">
+			<view class="flex-row items-center">
+				<text class="font_2 text_9">自动设防</text>
+				<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="3" src="/images/help.png" />
+			</view>
+			<switch checked="{{setting.autoFortify!==0}}" color="#0D7AFF" bindchange="autoFortify" />
+		</view>
+		<view wx:if="{{setting.autoFortify!==0}}">
+			<slider bindchange="autoFortify" activeColor="#0D7AFF" block-color="#0D7AFF" backgroundColor="#89B3E6" show-value="{{true}}" min="5" max="60" value="{{setting.autoFortify}}" />
+			<view class="flex-row justify-between group_8">
+				<text class="font_5">5秒</text>
+				<text class="font_5 text_10">60秒</text>
+			</view>
+		</view>
+	</view>
+	<view class="flex-col section_10">
+		<view class="flex-row justify-between items-center">
+			<view class="flex-row items-center">
+				<text class="font_2 text_11">自动关机</text>
+				<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="4" src="/images/help.png" />
+			</view>
+			<switch checked="{{setting.autoClose!==0}}" color="#0D7AFF" bindchange="autoClose" />
+		</view>
+		<view wx:if="{{setting.autoClose!==0}}">
+			<slider bindchange="autoClose" activeColor="#0D7AFF" block-color="#0D7AFF" backgroundColor="#89B3E6" show-value="{{true}}" min="3" max="10" value="{{setting.autoClose}}" />
+			<view class="mt-8 flex-row justify-between">
+				<text class="font_5 text_12">3分钟</text>
+				<text class="font_5 text_13">10分钟</text>
+			</view>
+		</view>
+	</view>
+	<view class="flex-row justify-center section_11" bind:tap="share" wx:if="{{user.identity===1}}">
+		<image class="image_10" src="/images/3.png" />
+		<text class="font_6 text_14 ml-17">分享二维码</text>
+	</view>
+	<view class="flex-row justify-center section_11" bind:tap="pincode" wx:if="{{user.identity===1}}">
+		<image class="image_11" src="/images/4.png" />
+		<text class="font_6 text_15 ml-15">修改配对码</text>
+	</view>
+</view>

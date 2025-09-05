@@ -1,0 +1,6 @@
+{
+    "usingComponents": {
+		"control":"/control/control",
+		"setting":"/setting/setting"
+	}
+}

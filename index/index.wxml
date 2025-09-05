@@ -1,100 +1,100 @@
 <view wx:if="{{readWrite===false}}">
-    <view class="connected_info_button" wx:if="{{openBluetoothAdapter}}">
-        <!-- <button bindtap="getBluetoothDevices">获取设备</button> -->
-        <button bindtap="scanCode">扫码连接</button>
-    </view>
-    <view class="devices_summary">已保存 {{devices.length}} 个设备：</view>
-    <view class="device_list">
-        <view wx:for="{{devices}}" wx:key="index" data-device-id="{{item.deviceId}}" data-name="{{item.name || item.localName}}" bindtap="connection" class="device_item" hover-class="device_item_hover">
-            <view style="font-size: 16px; color: #333;">{{item.name}}</view>
-            <view style="font-size: 10px">信号强度: {{item.RSSI}}dBm ({{utils.max(0, item.RSSI + 100)}}%)</view>
-            <view style="font-size: 10px">UUID: {{item.deviceId}}</view>
-            <view style="font-size: 10px">Service数量: {{utils.len(item.advertisServiceUUIDs)}}</view>
-        </view>
-    </view>
+	<view class="connected_info_button" wx:if="{{openBluetoothAdapter}}">
+		<button bindtap="getBluetoothDevices">获取设备</button>
+		<button bindtap="scanCode">扫码连接</button>
+	</view>
+	<view class="devices_summary">已保存 {{devices.length}} 个设备：</view>
+	<view class="device_list">
+		<view wx:for="{{devices}}" wx:key="index" data-device-id="{{item.deviceId}}" data-name="{{item.name || item.localName}}" bindtap="connection" class="device_item" hover-class="device_item_hover">
+			<view style="font-size: 16px; color: #333;">{{item.name}}</view>
+			<view style="font-size: 10px">信号强度: {{item.RSSI}}dBm ({{utils.max(0, item.RSSI + 100)}}%)</view>
+			<view style="font-size: 10px">UUID: {{item.deviceId}}</view>
+			<view style="font-size: 10px">Service数量: {{utils.len(item.advertisServiceUUIDs)}}</view>
+		</view>
+	</view>
 </view>
 <view class="connected_info" wx:else>
-    <view>
-        <text>已连接到 {{readWrite.name}}</text>
-    </view>
-    <view class="connected_info_button">
-        <button size="mini" bindtap="closeBLEConnection" type="warn">断开连接</button>
-        <button size="mini" bindtap="createQrcode" type="primary">生成二维码</button>
-        <button bind:tap="getPinCode" size="mini" wx:if="{{user.identity===1}}">配对码</button>
-    </view>
-    <view class="connected_info_button" wx:if="{{user.deviceId}}">
-        <button bind:tap="control" data-control="{{[setting.open?2:1,0,0]}}" size="mini" disabled="{{user.state!==0}}">{{setting.open?"关机":"开机"}}</button>
-        <button bind:tap="control" data-control="{{[0,setting.fortify?2:1,0]}}" size="mini" disabled="{{user.state!==0}}">{{setting.fortify?"撤防":"设防"}}</button>
-        <button bind:tap="control" data-control="{{[0,0,1]}}" size="mini" disabled="{{user.state!==0}}">打开坐桶</button>
-    </view>
-    <form class="connected_info_form" catchsubmit="writeSetting" wx:if="{{user.identity===1}}">
-        <view class="connected_info_form_item">
-            <text>感应解锁</text>
-            <switch checked="{{setting.inductiveUnlocking}}" name="inductiveUnlocking" />
-        </view>
-        <view class="connected_info_form_item">
-            <text>静默防盗</text>
-            <switch checked="{{setting.silentAntiTheft}}" name="silentAntiTheft" />
-        </view>
-        <view class="connected_info_form_item">
-            <text>感应解锁距离</text>
-            <radio-group name="unlockDistance">
-                <label>
-                    <radio value="0" checked="{{setting.unlockDistance===0}}"></radio>近
-                </label>
-                <label>
-                    <radio value="1" checked="{{setting.unlockDistance===1}}"></radio>中
-                </label>
-                <label>
-                    <radio value="2" checked="{{setting.unlockDistance===2}}"></radio>远
-                </label>
-            </radio-group>
-        </view>
-        <view class="connected_info_form_item">
-            <text>自动关机时间</text>
-            <switch checked="{{setting.autoClose}}" bindchange="autoClose" />
-            <view wx:if="{{setting.autoClose}}">
-                <input name="autoClose" value="{{setting.autoClose}}" type="number" />
-            </view>
-        </view>
-        <view class="connected_info_form_item">
-            <text>自动设防时间</text>
-            <switch checked="{{setting.autoFortify}}" bindchange="autoFortify" />
-            <view wx:if="{{setting.autoFortify}}">
-                <input value="{{setting.autoFortify}}" type="number" />
-            </view>
-        </view>
-        <view class="connected_info_button">
-            <button bind:tap="getSetting" size="mini">获取车辆配置</button>
-            <button size="mini" type="primary" formType="submit">写入设置</button>
-        </view>
-    </form>
-    <view class="device_list" wx:if="{{user.identity===1}}">
-        <button bind:tap="getDeviceUser" size="mini">获取用户列表</button>
-        <view wx:for="{{bindUser}}" wx:key="index" data-index="{{index}}" bindtap="setUser" class="device_item" hover-class="device_item_hover">
-            <view style="font-size: 16px; color: #333;">
-                <text wx:if="{{item.identity}}" style="color: orange;margin: 0 20rpx;">车主</text>
-                <text wx:else>{{userMap[item.deviceId]||"匿名"}} </text>
-                <text style="color:red" wx:if="{{item.state}}">禁用</text>
-            </view>
-            <view style="font-size: 10px">UUID: {{item.deviceId}}</view>
-        </view>
-    </view>
+	<view>
+		<text>已连接到 {{readWrite.name}}</text>
+	</view>
+	<view class="connected_info_button">
+		<button size="mini" bindtap="closeBLEConnection" type="warn">断开连接</button>
+		<button size="mini" bindtap="createQrcode" type="primary">生成二维码</button>
+		<button bind:tap="getPinCode" size="mini" wx:if="{{user.identity===1}}">配对码</button>
+	</view>
+	<view class="connected_info_button" wx:if="{{user.deviceId}}">
+		<button bind:tap="control" data-control="{{[setting.open?2:1,0,0]}}" size="mini" disabled="{{user.state!==0}}">{{setting.open?"关机":"开机"}}</button>
+		<button bind:tap="control" data-control="{{[0,setting.fortify?2:1,0]}}" size="mini" disabled="{{user.state!==0}}">{{setting.fortify?"撤防":"设防"}}</button>
+		<button bind:tap="control" data-control="{{[0,0,1]}}" size="mini" disabled="{{user.state!==0}}">打开坐桶</button>
+	</view>
+	<form class="connected_info_form" catchsubmit="writeSetting" wx:if="{{user.identity===1}}">
+		<view class="connected_info_form_item">
+			<text>感应解锁</text>
+			<switch checked="{{setting.inductiveUnlocking}}" name="inductiveUnlocking" />
+		</view>
+		<view class="connected_info_form_item">
+			<text>静默防盗</text>
+			<switch checked="{{setting.silentAntiTheft}}" name="silentAntiTheft" />
+		</view>
+		<view class="connected_info_form_item">
+			<text>感应解锁距离</text>
+			<radio-group name="unlockDistance">
+				<label>
+					<radio value="0" checked="{{setting.unlockDistance===0}}"></radio>近
+				</label>
+				<label>
+					<radio value="1" checked="{{setting.unlockDistance===1}}"></radio>中
+				</label>
+				<label>
+					<radio value="2" checked="{{setting.unlockDistance===2}}"></radio>远
+				</label>
+			</radio-group>
+		</view>
+		<view class="connected_info_form_item">
+			<text>自动关机时间</text>
+			<switch checked="{{setting.autoClose}}" bindchange="autoClose" />
+			<view wx:if="{{setting.autoClose}}">
+				<input name="autoClose" value="{{setting.autoClose}}" type="number" />
+			</view>
+		</view>
+		<view class="connected_info_form_item">
+			<text>自动设防时间</text>
+			<switch checked="{{setting.autoFortify}}" bindchange="autoFortify" />
+			<view wx:if="{{setting.autoFortify}}">
+				<input value="{{setting.autoFortify}}" type="number" />
+			</view>
+		</view>
+		<view class="connected_info_button">
+			<button bind:tap="getSetting" size="mini">获取车辆配置</button>
+			<button size="mini" type="primary" formType="submit">写入设置</button>
+		</view>
+	</form>
+	<view class="device_list" wx:if="{{user.identity===1}}">
+		<button bind:tap="getDeviceUser" size="mini">获取用户列表</button>
+		<view wx:for="{{bindUser}}" wx:key="index" data-index="{{index}}" bindtap="setUser" class="device_item" hover-class="device_item_hover">
+			<view style="font-size: 16px; color: #333;">
+				<text wx:if="{{item.identity}}" style="color: orange;margin: 0 20rpx;">车主</text>
+				<text wx:else>{{userMap[item.deviceId]||"匿名"}} </text>
+				<text style="color:red" wx:if="{{item.state}}">禁用</text>
+			</view>
+			<view style="font-size: 10px">UUID: {{item.deviceId}}</view>
+		</view>
+	</view>
 </view>
 
 <view class="qrcode">
-    <canvas style="width:{{width}}px;height:{{height}}px;" canvas-id="qrcode" id="qrcode" bind:tap="share"></canvas>
+	<canvas style="width:{{width}}px;height:{{height}}px;" canvas-id="qrcode" id="qrcode" bind:tap="share"></canvas>
 </view>
 <page-container duration="{{0}}" bind:afterleave="afterleave" show="{{dialog}}">
-    <view class="dialog">
-        <view class="dialog-hd">设置{{dialog.type==="mark"?"备注":"配对码"}}</view>
-        <view class="dialog-bd">
-            <input type="{{dialog.type==='mark'?'text':'number'}}" maxlength="{{dialog.type==='mark'?10:6}}" bindinput="setDialogInput" value="{{dialog.input}}" />
-        </view>
-        <view class="dialog-btn">
-            <view bind:tap="afterleave">关闭</view>
-            <view wx:if="{{dialog.type==='pincode'}}" bind:tap="copy" data-value="{{dialog.input}}">复制</view>
-            <view bind:tap="sure">确认</view>
-        </view>
-    </view>
+	<view class="dialog">
+		<view class="dialog-hd">设置{{dialog.type==="mark"?"备注":"配对码"}}</view>
+		<view class="dialog-bd">
+			<input type="{{dialog.type==='mark'?'text':'number'}}" maxlength="{{dialog.type==='mark'?10:6}}" bindinput="setDialogInput" value="{{dialog.input}}" />
+		</view>
+		<view class="dialog-btn">
+			<view bind:tap="afterleave">关闭</view>
+			<view wx:if="{{dialog.type==='pincode'}}" bind:tap="copy" data-value="{{dialog.input}}">复制</view>
+			<view bind:tap="sure">确认</view>
+		</view>
+	</view>
 </page-container>

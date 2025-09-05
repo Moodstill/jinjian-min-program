@@ -1,0 +1,12 @@
+<view class="flex-col page">
+	<view class="flex-row items-end group_2" style="height: 40rpx;">
+	</view>
+	<view class="flex-col group_3" wx:if="{{parent.user.identity===1}}">
+		<view class="flex-row justify-between self-stretch group_4">
+			<text class="font text_2 {{page==='vehicle'?'active':''}}" bind:tap="switchTab" data-page="vehicle">车辆设置</text>
+			<text class="font text_2 {{page==='user'?'active':''}}" bind:tap="switchTab" data-page="user">账户管理</text>
+		</view>
+	</view>
+	<vehicle wx:if="{{page==='vehicle'}}" user="{{parent.user}}" setting="{{parent.setting}}" bind:update="update" />
+	<user wx:else userMap="{{parent.userMap}}" device="{{parent.device}}" bind:update="update" />
+</view>

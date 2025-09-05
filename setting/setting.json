@@ -1,0 +1,7 @@
+{
+	"component": true,
+	"usingComponents": {
+		"vehicle": "/vehicle/vehicle",
+		"user": "/user/user"
+	}
+}
