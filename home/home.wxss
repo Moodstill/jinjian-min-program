@@ -93,6 +93,10 @@
 	overflow-y: auto;
 }
 
+.dialog-bd.image image {
+	width: 100%;
+}
+
 .dialog-bd .dialog-content {
 	margin: 40rpx 0;
 	height: auto;
@@ -165,11 +169,20 @@
 	border-radius: 10rpx;
 	background: #fff;
 	padding: 10rpx 20rpx;
+}
+
+.dialog-find .device-item .prevDeviceId {
+	margin-left: auto;
+	flex-shrink: 0;
+	color: rgb(16, 212, 16);
+	font-size: 24rpx;
+}
+
+.dialog-find .device-item>view {
+	width: calc(100% - 100rpx);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-
-.dialog-find .device-item text {
-	font-size: 20rpx;
+	word-break: break-all;
+	word-wrap: break-word;
 }

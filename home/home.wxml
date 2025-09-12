@@ -1,10 +1,10 @@
 <view class="page">
 	<!-- <button bind:tap="createQrcode" style="margin-top: 40rpx;">aa</button> -->
-	<view class="page-box {{(data.openBluetoothAdapter&&data.user.deviceId&& data.user.state===0)?'scroll':''}}">
+	<view class="page-box {{ data.user.deviceId&& data.user.state===0?'scroll':''}}">
 		<control id="device-control" parent="{{data}}" bind:update="update" wx:if="{{page==='control'}}" />
 		<setting parent="{{data}}" wx:else bind:update="update" />
 	</view>
-	<view class="flex-row justify-center group_9" wx:if="{{data.openBluetoothAdapter && data.user.deviceId && data.user.state===0}}">
+	<view class="flex-row justify-center group_9" wx:if="{{ data.user.deviceId && data.user.state===0}}">
 		<view class="{{page==='control'?'active':''}}" bind:tap="switchTab" data-page="control">
 			<image src="/images/7.png" wx:if="{{page==='control'}}" alt="" />
 			<image src="/images/6.png" wx:else="" alt="" />
@@ -24,8 +24,8 @@
 	</view>
 </view>
 <view class="qrcode">
-	<canvas style="width:{{width}}px;height:{{height}}px;" canvas-id="qrcodeTmp" id="qrcodeTmp"></canvas>
-	<canvas style="width:{{width+40}}px;height:{{height+120}}px;" canvas-id="qrcode" id="qrcode"></canvas>
+	<canvas type="2d" style="width:{{width}}px;height:{{height}}px;" id="qrcodeTmp"></canvas>
+	<canvas type="2d" style="width:{{width}}px;height:{{height*1.2}}px;" id="qrcode"></canvas>
 </view>
 <page-container duration="{{0}}" bind:afterleave="afterleave" show="{{true}}" wx:if="{{data.dialog}}">
 	<view class="dialog">
@@ -36,17 +36,23 @@
 		<view class="dialog-hd flex-row items-center justify-between" wx:elif="{{data.dialog.type==='help'}}">{{data.dialog.title}}
 			<image src="/images/help.png" />
 		</view>
-		<view class="dialog-hd flex-row items-center" wx:else="">当前配对码 <text>{{data.dialog.pinCode}}</text></view>
+		<view class="dialog-hd flex-row items-center" wx:elif="{{data.dialog.type==='pincode'}}">当前配对码 <text>{{data.dialog.pinCode}}</text></view>
 		<view class="dialog-bd" wx:if="{{data.dialog.type==='find'}}">
 			<view class="dialog-find">
 				<view wx:if="{{!devices.length}}">正在查询设备...</view>
 				<view wx:else="">
-					<view class="device-item" wx:for="{{devices}}" wx:for-item="item" wx:for-index="index" bind:tap="createBLEConnectionEvent" data-index="{{index}}" wx:key="index">
-						{{item.name || item.localName || ""}}
-						<text>( {{item.deviceId}} )</text>
+					<view class="device-item flex-row items-center" wx:for="{{devices}}" wx:for-item="item" wx:for-index="index" bind:tap="createBLEConnectionEvent" data-index="{{index}}" wx:key="index">
+						<view>
+							<text>{{item.name || item.localName || ""}}</text>
+							<text style="font-size: 20rpx;">( {{item.deviceId}} )</text>
+						</view>
+						<text class="prevDeviceId" wx:if="{{prevDeviceId===item.deviceId}}">上次连接</text>
 					</view>
 				</view>
 			</view>
+		</view>
+		<view class="dialog-bd image" wx:elif="{{data.dialog.type==='image'}}">
+			<image src="{{data.dialog.url}}" mode="widthFix" show-menu-by-longpress="{{true}}" />
 		</view>
 		<view class="dialog-bd" wx:elif="{{data.dialog.type==='help'}}">
 			<view class="dialog-content">
@@ -80,9 +86,11 @@
 			</view>
 		</view>
 		<view class="dialog-btn flex-row items-center justify-around">
-			<view class="flex-row items-center justify-center" bind:tap="afterleave">取消</view>
+			<view class="flex-row items-center justify-center" wx:if="{{data.dialog.type==='image'}}" bind:tap="save">保存</view>
+			<view class="flex-row items-center justify-center" wx:else="" bind:tap="afterleave">取消</view>
 			<!-- <view class="flex-row item-center justify-center" wx:if="{{data.dialog.type==='pincode'}}" bind:tap="copy" data-value="{{data.dialog.input}}">复制</view> -->
 			<view class="flex-row items-center justify-center" wx:if="{{data.dialog.type==='scanCode'}}" bind:tap="copyandlink">复制并连接</view>
+			<view class="flex-row items-center justify-center" wx:elif="{{data.dialog.type==='image'}}" bind:tap="shareQrcode">分享</view>
 			<view class="flex-row items-center justify-center" wx:elif="{{data.dialog.type==='pincode' || data.dialog.type==='mark'}}" bind:tap="sure">确认</view>
 		</view>
 	</view>

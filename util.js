@@ -11,6 +11,11 @@ const _this = {
 	setDevice(data) {
 		_this.device = data
 	},
+	sleep(time) {
+		return new Promise(reslove => {
+			setTimeout(() => reslove(), time)
+		})
+	},
 	crc16(data) {
 		const uint8Array = new Uint8Array(data)
 		const total = uint8Array.reduce((a, b) => a += b, 0)
@@ -150,6 +155,70 @@ const _this = {
 	},
 	on: (event, callback) => {
 		_this.callbacks[event] = callback
+	},
+	openBluetooth() {
+		return new Promise(reslove => {
+			wx.authorize({
+				scope: 'scope.bluetooth',
+				success: async () => {
+					await _this.openBluetoothAdapter()
+					reslove()
+				},
+				fail: (e) => {
+					_this.log(e, "authorize bluetooth")
+					_this.requestOpenBluetooth()
+				}
+			})
+		})
+	},
+	isIOS: wx.getDeviceInfo().platform === "ios",
+	openBluetoothAdapter() {
+		return new Promise(reslove => {
+			wx.openBluetoothAdapter({
+				success: () => {
+					reslove(true)
+				},
+				fail: (res) => {
+					if (res.errCode === 10001) {
+						wx.showLoading({
+							title: '请开启蓝牙',
+							mask: true
+						})
+						return wx.onBluetoothAdapterStateChange((res) => {
+							wx.hideLoading()
+							if (res.available) {
+								reslove()
+							}
+						})
+					}
+					_this.error(res, "openBluetoothAdapter")
+				}
+			})
+		})
+	},
+	requestOpenBluetooth() {
+		wx.showModal({
+			title: '提示',
+			content: '请开启蓝牙权限',
+			confirmText: "开启",
+			success: () => _this.openSetting()
+		})
+	},
+	openSetting() {
+		wx.openSetting({
+			success: (res) => {
+				if (res.authSetting['scope.bluetooth']) {
+					return
+				}
+				_this.requestOpenBluetooth()
+			},
+			fail: (e) => {
+				wx.showModal({
+					title: '提示',
+					content: '未打开设置页面，请手动打开设置界面，开启蓝牙权限',
+				})
+			}
+		})
 	},
 	errcode2Msg: {
 		10000: "未初始化蓝牙适配器",

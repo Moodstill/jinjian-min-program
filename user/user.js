@@ -116,7 +116,9 @@ Component({
 			})
 			await writePromise(0xa1, [...deviceId.split(":").map(val => parseInt(val, 16)), 1, 0])
 			wx.hideLoading()
-			this.triggerEvent("update", "getstate")
+			this.triggerEvent("update", {
+				state: true
+			})
 		}
 	}
 })

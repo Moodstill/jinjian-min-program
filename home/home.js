@@ -1,12 +1,14 @@
-const qrcode = require("weapp-qrcode")
+const qrcode = require("weapp-qrcode-canvas-2d")
 const {
 	error,
 	hex2arrayBuffer,
 	writePromise,
-	errcode2Msg,
+	sleep,
 	log,
 	on,
-	onBLECharacteristicValueChange
+	onBLECharacteristicValueChange,
+	openBluetooth,
+	isIOS,
 } = require("../util")
 
 Page({
@@ -22,8 +24,7 @@ Page({
 			// 	deviceId: "22",
 			// 	state: 0
 			// },
-			// openBluetoothAdapter: true,
-			openBluetoothAdapter: false,
+			myDeviceId: "",
 			user: {},
 			devices: [],
 			userMap: {},
@@ -53,7 +54,7 @@ Page({
 	/**
 	 * 生命周期函数--监听页面加载
 	 */
-	onLoad(options) {
+	async onLoad(options) {
 		const windowInfo = wx.getWindowInfo()
 		const dpr = windowInfo.windowWidth / 375
 		const width = Math.floor(300 * dpr)
@@ -64,55 +65,46 @@ Page({
 		})
 		const devices = wx.getStorageSync('devices') || []
 		const userMap = wx.getStorageSync('userMap') || {}
+		const myDeviceId = wx.getStorageSync('myDeviceId')
 		this._setData({
 			devices,
 			userMap,
-		})
-		wx.authorize({
-			scope: 'scope.bluetooth',
-			success: () => {
-				this.openBluetoothAdapter()
-			},
-			fail: () => this.requestOpenBluetooth()
+			myDeviceId
 		})
 		on("user", (user) => {
 			clearInterval(this.timerUser)
 			this._setData({
 				user,
-				dialog: false
+				myDeviceId: user.deviceId,
+				readStateIng: false
 			})
+			wx.setStorageSync('prevDeviceId', this.data.data.device.deviceId)
+			wx.setStorageSync('myDeviceId', user.deviceId)
 		})
 		on("setting", (setting) => {
+			log("setting", setting)
 			this._setData({
 				setting,
 			})
 			writePromise(1, [])
 		})
+		await openBluetooth()
 		onBLECharacteristicValueChange()
-	},
-	requestOpenBluetooth() {
-		wx.showModal({
-			title: '提示',
-			content: '请开启蓝牙权限',
-			confirmText: "开启",
-			success: () => this.openSetting()
-		})
-	},
-	openSetting() {
-		wx.openSetting({
-			success: (res) => {
-				if (res.authSetting['scope.bluetooth']) {
-					return this.openBluetoothAdapter()
+		if (devices.length) {
+			const {
+				deviceId,
+				name
+			} = devices[0]
+			this._setData({
+				device: {
+					deviceId,
+					name
 				}
-				this.requestOpenBluetooth()
-			},
-			fail: (e) => {
-				wx.showModal({
-					title: '提示',
-					content: '未打开设置页面，请手动打开设置界面，开启蓝牙权限',
-				})
+			})
+			if (isIOS) {
+				this.selectComponent("#device-control")?.createBLEConnection(deviceId, name)
 			}
-		})
+		}
 	},
 	/**
 	 * 生命周期函数--监听页面初次渲染完成
@@ -138,102 +130,269 @@ Page({
 			}
 		})
 	},
-	async createQrcode() {
-		if (this.qrcode) {
-			return this.canvasToTempFilePath()
+
+	async closeBLEConnection(isCloseBluetooth) {
+		try {
+			await wx.closeBLEConnection({
+				deviceId: this.data.data.device.deviceId
+			})
+			if (isCloseBluetooth && isIOS) {
+				return new Promise(reslove => {
+					wx.showModal({
+						title: '提示',
+						content: '请前往系统设置关闭蓝牙连接',
+						complete: (res) => {
+							if (res.cancel) {
+
+							}
+
+							if (res.confirm) {
+
+							}
+							reslove()
+						}
+					})
+				})
+			}
+		} catch (error) {
+			log(error)
 		}
-		const pinCode = await writePromise(4, [])
-		if (!pinCode) return wx.showModal({
-			content: '配对码获取失败',
+		this.selectComponent("#device-control").closeBLEConnection()
+		this._setData({
+			user: {}
 		})
-		wx.showLoading({
-			title: '正在生成',
-			mask: true
+	},
+	async createQrcodeBtn() {
+		wx.showActionSheet({
+			itemList: ["面对面扫码", "保存二维码"],
+			success: async (res) => {
+				if (res.tapIndex === 0) {
+					wx.showModal({
+						title: '提示',
+						content: '面对面扫码连接需先断开蓝牙连接，是否继续？',
+						cancelText: "否",
+						confirmText: "是",
+						complete: async (res) => {
+							if (res.cancel) {
+
+							}
+
+							if (res.confirm) {
+								await this.createQrcode()
+								await this.closeBLEConnection(true)
+								this.setData({
+									page: "control"
+								})
+								this._setData({
+									user: {},
+									dialog: {
+										type: "image",
+										url: this.qrcode
+									},
+									readStateIng: false
+								})
+							}
+						}
+					})
+				} else if (res.tapIndex === 1) {
+					if (!this.qrcode) await this.createQrcode()
+					this.save()
+				}
+			}
 		})
-		const {
-			deviceId,
-			name
-		} = this.data.data.device
-		this.text = deviceId + "," + name + "," + pinCode
-		// this.text = "aa"
-		const {
-			width,
-			height
-		} = this.data
-		const ctx = wx.createCanvasContext('qrcode', this)
-		qrcode({
-			width,
-			height,
-			x: 0,
-			y: 0,
-			canvasId: "qrcodeTmp",
-			text: this.text,
-			callback: () => {
+	},
+	createQrcode() {
+		return new Promise(async reslove => {
+			wx.showLoading({
+				title: '正在生成',
+				mask: true
+			})
+			const pinCode = await writePromise(4, [], true)
+			if (!pinCode) {
+				wx.hideLoading()
+				return wx.showModal({
+					content: '配对码获取失败',
+				})
+			}
+			const {
+				deviceId,
+				name
+			} = this.data.data.device
+			this.text = name + "," + pinCode
+			// this.text = "aa"
+			// let name = "as"
+			const {
+				width,
+				height
+			} = this.data
+			const query = wx.createSelectorQuery().in(this)
+			query.select("#qrcodeTmp").node()
+			query.select("#qrcode").node()
+			query.exec(async res => {
+				const qrt = res[0].node,
+					qr = res[1].node
+				qrt.width = qr.width = width
+				qrt.height = height
+				qr.height = height * 1.2
+				await qrcode({
+					width,
+					height,
+					padding: 20,
+					background: "#cecece",
+					canvas: qrt,
+					text: this.text,
+				})
+				const ctx = qr.getContext("2d")
+				ctx.fillStyle = "#cecece"
+				ctx.fillRect(0, 0, width, height * 1.2)
+				let image = qrt.createImage()
+				await new Promise(reslove2 => {
+					image.onload = () => {
+						reslove2()
+					}
+					image.src = qrt.toDataURL()
+				})
+				ctx.drawImage(image, 0, 0, width, height)
 				ctx.fillStyle = "#000"
 				ctx.font = "30px/30px Arial"
 				ctx.textBaseline = "middle"
 				ctx.textAlign = "center"
-				ctx.fillText(name, width / 2 + 20, height + 80)
-				ctx.draw()
-				wx.canvasGetImageData({
-					canvasId: 'qrcodeTmp',
-					height,
-					width,
-					x: 0,
-					y: 0,
-					success: (res) => {
-						wx.canvasPutImageData({
-							canvasId: "qrcode",
-							data: res.data,
-							x: 20,
-							y: 20,
-							width,
-							height,
-							success: () => {
-								wx.hideLoading()
-								this.qrcode = true
-								this.canvasToTempFilePath()
-							},
-							fail(res) {
-								log(res, "canvasPutImageData")
-								wx.hideLoading()
-								error(res)
-							}
-						}, this)
-					},
-					fail(res) {
-						log("canvasGetImageData", res)
-						wx.hideLoading()
-						error(res)
-					}
-				}, this)
-			}
+				ctx.fillText(name, width / 2, height * 1.1)
+				wx.hideLoading()
+				this.qrcode = qr.toDataURL()
+				reslove(this.qrcode)
+			})
 		})
 	},
-	canvasToTempFilePath() {
-		wx.canvasToTempFilePath({
-			canvasId: "qrcode",
-			success: (res) => {
-				wx.previewImage({
-					urls: [res.tempFilePath],
-				})
+	save() {
+		if (this.saveing) return
+		this.saveing = true
+		wx.authorize({
+			scope: 'scope.writePhotosAlbum',
+			success: res => {
+				wx.createSelectorQuery().in(this).select("#qrcode").node(res => {
+					wx.canvasToTempFilePath({
+						canvas: res.node,
+						success: res => {
+							wx.saveImageToPhotosAlbum({
+								filePath: res.tempFilePath,
+								success: () => {
+									this.saveing = false
+									wx.showToast({
+										title: '保存成功',
+										icon: "success"
+									})
+								},
+								fail: (e) => {
+									this.saveing = false
+
+									wx.showToast({
+										title: e.errMsg,
+										icon: "error"
+									})
+								}
+							})
+						},
+						fail: () => {
+							this.saveing = false
+							wx.showToast({
+								title: e.errMsg,
+								icon: "error"
+							})
+						}
+					})
+				}).exec()
 			},
-			fail(res) {
-				log(res, "canvasToTempFilePath")
-				error(res)
+			fail: (e) => {
+				this.saveing = false
+				wx.showModal({
+					title: '提示',
+					content: '请打开相册写入权限',
+					confirmText: "去设置",
+					complete: (res) => {
+						if (res.cancel) {
+
+						}
+
+						if (res.confirm) {
+							wx.openSetting()
+						}
+					}
+				})
 			}
-		})
+		}, this)
 	},
-	async readState() {
+	shareQrcode() {
+		if (this.saveing) return
+		this.saveing = true
+		wx.createSelectorQuery().in(this).select("#qrcode").node(res => {
+			wx.canvasToTempFilePath({
+				canvas: res.node,
+				success: res => {
+					wx.showShareImageMenu({
+						path: res.tempFilePath,
+						// needShowEntrance:false,
+						success: () => {
+							this.saveing = false
+							wx.showToast({
+								title: '分享成功',
+								icon: "success"
+							})
+						},
+						fail: (e) => {
+							this.saveing = false
+							wx.showToast({
+								title: "分享失败",
+								icon: "error"
+							})
+						}
+					})
+				},
+				fail: () => {
+					this.saveing = false
+					wx.showToast({
+						title: e.errMsg,
+						icon: "error"
+					})
+				}
+			})
+		}).exec()
+	},
+	async readState(isfirst) {
 		this._setData({
-			dialog: {
-				type: "loading",
-				title: "获取状态"
-			}
+			readStateIng: true
 		})
+		await sleep(500)
 		writePromise(2, [], true)
 		clearInterval(this.timerUser)
+		this.count = 0
 		this.timerUser = setInterval(() => {
+			if (this.count > (isfirst ? 30 : 2)) {
+				wx.showModal({
+					title: '提示',
+					content: '获取失败！请重新连接',
+					complete: async (res) => {
+						if (res.cancel) {
+
+						}
+
+						if (res.confirm) {
+							const deviceControl = this.selectComponent("#device-control")
+							const {
+								deviceId,
+								name
+							} = this.data.data.device
+							await this.closeBLEConnection()
+							deviceControl.createBLEConnection(deviceId, name)
+						}
+					}
+				})
+				this._setData({
+					readStateIng: false
+				})
+				return clearInterval(this.timerUser)
+			}
+			this.count++
 			writePromise(2, [], true)
 		}, 1000)
 		// await writePromise(1, [])
@@ -250,11 +409,15 @@ Page({
 				if (!this.data.data.dialog) this._setData({
 					dialog: {
 						type: "find",
-					}
+					},
+				})
+				this.setData({
+					prevDeviceId: this.prevDeviceId
 				})
 				this.onBluetoothDeviceFound(name)
 			},
 			fail: (res) => {
+				this._discoveryStarted = false
 				error(res, "startBluetoothDevicesDiscovery")
 			}
 		})
@@ -270,7 +433,11 @@ Page({
 				if (!device.name && !device.localName) {
 					return
 				}
-				if (name && device.name === name) return this.createBLEConnection(device.deviceId, name)
+				if (name && device.name === name) {
+					clearTimeout(this.timerOut)
+					this.stopBluetoothDevicesDiscovery()
+					return this.createBLEConnection(device.deviceId, name)
+				}
 				if (!device.name.includes("KEY-JINJIAN")) return
 				const idx = foundDevices.findIndex(v => v.deviceId === device.deviceId)
 				if (idx === -1) {
@@ -280,11 +447,12 @@ Page({
 				}
 			})
 			this.setData({
-				devices: foundDevices
+				devices: foundDevices,
 			})
 		})
 	},
 	async getBluetoothDevices(name) {
+		await openBluetooth()
 		try {
 			const result = await wx.getBluetoothDevices()
 			log(result)
@@ -305,26 +473,48 @@ Page({
 		this.createBLEConnection(device.deviceId, device.name)
 		log(device, "createBLEConnection")
 	},
-	createBLEConnection(deviceId, name) {
+	async createBLEConnection(deviceId, name) {
+		if (this.pin && !isIOS) {
+			try {
+				const isBluetoothDevicePaired = await wx.isBluetoothDevicePaired({
+					deviceId,
+				})
+				log(isBluetoothDevicePaired, "isBluetoothDevicePaired")
+				if (!isBluetoothDevicePaired?.isPaired) {
+					const makeBluetoothPair = await wx.makeBluetoothPair({
+						deviceId,
+						pin: btoa(this.pin),
+					})
+					log("makeBluetoothPair", makeBluetoothPair)
+					this.pin = false
+				}
+			} catch (error) {
+				log(error, "makeBluetoothPair")
+			}
+		}
 		this.qrcode = false
 		const deviceControl = this.selectComponent("#device-control")
 		deviceControl.createBLEConnection(deviceId, name)
 		this.afterleave()
 	},
 	async update(e) {
+		if (e.detail === "closeBLEConnection") {
+			return this.closeBLEConnection(true)
+		}
 		if (e.detail === "buletooth") {
+			this.prevDeviceId = wx.getStorageSync('prevDeviceId')
 			const res = await this.getBluetoothDevices()
 			if (!res) return
 			return this.startBluetoothDevicesDiscovery()
 		}
-		if (e.detail === "getstate") {
-			return this.readState()
+		if (e.detail?.state) {
+			return this.readState(e.detail.isfirst)
 		}
 		if (e.detail === "pincode") {
 			return this.getPinCode()
 		}
 		if (e.detail === "qrcode") {
-			return this.createQrcode()
+			return this.createQrcodeBtn()
 		}
 		this._setData(e.detail)
 	},
@@ -336,19 +526,23 @@ Page({
 			this.setData({
 				devices: []
 			})
-		} else if (this.data.data.dialog.type === "loading") {
-			clearInterval(this.timerUser)
 		}
 		this._setData({
 			dialog: false
 		})
 		wx.hideKeyboard()
 	},
-	copyandlink() {
+	async copyandlink() {
 		const {
 			name,
 			pinCode
 		} = this.data.data.dialog
+		if (this.data.data.user.deviceId) {
+			await this.closeBLEConnection()
+			this._setData({
+				user: {}
+			})
+		}
 		wx.setClipboardData({
 			data: pinCode,
 			success: async () => {
@@ -356,20 +550,28 @@ Page({
 					title: '正在查询',
 					mask: true
 				})
+				this.pin = pinCode
 				const result = await this.getBluetoothDevices(name)
 				if (result) {
-					if (result === true) this.startBluetoothDevicesDiscovery(name)
-					log(result, "copyandlink")
-					this.createBLEConnection(result.deviceId, name)
+					if (result === true) {
+						this.timerOut = setTimeout(() => {
+							wx.hideLoading()
+							wx.showToast({
+								title: '未找到设备',
+								icon: "error"
+							})
+							this.stopBluetoothDevicesDiscovery()
+						}, 5000)
+						return this.startBluetoothDevicesDiscovery(name)
+					}
+					log(result, "getBluetoothDevices")
+					return this.createBLEConnection(result.deviceId, name)
 				}
-				this.timerOut = clearTimeout(() => {
-					wx.hideLoading()
-					wx.showToast({
-						title: '未找到设备',
-						icon: "error"
-					})
-					this.stopBluetoothDevicesDiscovery()
-				}, 5000)
+				wx.hideLoading()
+				wx.showToast({
+					title: '未找到设备',
+					icon: "error"
+				})
 			},
 			fail(res) {
 				wx.showToast({
@@ -424,7 +626,7 @@ Page({
 
 	},
 	switchTab(e) {
-		if (!this.data.data.openBluetoothAdapter || !this.data.data.user.deviceId) return
+		if (!this.data.data.user.deviceId) return
 		this.setData({
 			page: e.currentTarget.dataset.page
 		})
@@ -432,40 +634,9 @@ Page({
 	/**
 	 * 生命周期函数--监听页面隐藏
 	 */
-	onHide() {
-
-	},
-	openBluetoothAdapter() {
-		wx.openBluetoothAdapter({
-			success: () => {
-				this._setData({
-					openBluetoothAdapter: true
-				})
-			},
-			fail: (res) => {
-				if (res.errCode === 10001) {
-					wx.showLoading({
-						title: '请开启蓝牙',
-						mask: true
-					})
-					return wx.onBluetoothAdapterStateChange((res) => {
-						wx.hideLoading()
-						if (res.available) {
-							this._setData({
-								openBluetoothAdapter: true
-							})
-						}
-					})
-				}
-				error(res, "openBluetoothAdapter")
-			}
-		})
-	},
+	onHide() {},
 	closeBluetoothAdapter() {
-		wx.closeBluetoothAdapter()
-		this._setData({
-			openBluetoothAdapter: false
-		})
+		return wx.closeBluetoothAdapter()
 	},
 	/**
 	 * 生命周期函数--监听页面卸载

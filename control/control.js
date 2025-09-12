@@ -1,9 +1,10 @@
 const {
 	writePromise,
 	setDevice,
-	onBLECharacteristicValueChange,
+	sleep,
 	errcode2Msg,
-	log
+	log,
+	openBluetooth,
 } = require("../util")
 
 // control/control.js
@@ -28,11 +29,13 @@ Component({
 	},
 	lifetimes: {
 		detached() {
+			if (this.data.parent.user.deviceId) this.triggerEvent("update", {
+				readStateIng: true
+			})
 			clearTimeout(this.timer)
 		},
 		attached() {
-			this.query = wx.createSelectorQuery().in(this)
-			this.query.select('#dbm3')
+			wx.createSelectorQuery().in(this).select('#dbm3')
 				.node((res) => {
 					const canvas = res.node
 					this.ctx = canvas.getContext('2d')
@@ -59,25 +62,6 @@ Component({
 			}
 		}
 	},
-	observers: {
-		"parent.openBluetoothAdapter": function (openBluetoothAdapter) {
-			if (openBluetoothAdapter && !this.data.parent.device.deviceId) {
-				if (this.data.parent.devices.length) {
-					const {
-						deviceId,
-						name
-					} = this.data.parent.devices[0]
-					this.triggerEvent("update", {
-						device: {
-							deviceId,
-							name
-						}
-					})
-					this.createBLEConnection(deviceId, name)
-				}
-			}
-		}
-	},
 	/**
 	 * 组件的方法列表
 	 */
@@ -90,12 +74,15 @@ Component({
 				}
 			})
 		},
+		closeBLEConnection() {
+			clearTimeout(this.timer)
+		},
 		findBuletooth() {
-			if (this.data.parent.user.deviceId) return this.closeBLEConnection()
+			if (this.data.parent.user.deviceId) return this.triggerEvent("update", "closeBLEConnection")
 			this.triggerEvent("update", "buletooth")
 		},
 		async control(e) {
-			if (!this.data.parent.openBluetoothAdapter || this.data.parent.user.state !== 0) return
+			if (this.data.parent.user.state !== 0) return
 			const data = e.currentTarget.dataset.control
 			if (data[3] === 1) {
 				clearTimeout(this.finder)
@@ -106,7 +93,7 @@ Component({
 					this.setData({
 						closeTouch: false
 					})
-				}, 600);
+				}, 1900);
 			}
 			const result = await writePromise(0x03, Array.from(data))
 			this.triggerEvent("update", {
@@ -115,7 +102,6 @@ Component({
 					...result
 				}
 			})
-			wx.hideLoading()
 		},
 		closeTouchStart() {
 			this.setData({
@@ -128,13 +114,11 @@ Component({
 			})
 		},
 		async closeDevice() {
-			if (!this.data.parent.openBluetoothAdapter || this.data.parent.user.state !== 0) return
+			if (this.data.parent.user.state !== 0) return
 			this.setData({
 				isopening: true
 			})
-			await this.sleep(1000)
-			const result = await writePromise(0x03, [2, 0, 0])
-
+			const [result] = await Promise.all([writePromise(0x03, [2, 0, 0]), sleep(1000)])
 			if (result) {
 				this.triggerEvent("update", {
 					setting: {
@@ -148,33 +132,29 @@ Component({
 			})
 		},
 		touchstart(e) {
-			if (!this.data.parent.openBluetoothAdapter || this.data.parent.user.state !== 0) return
+			if (this.data.parent.user.state !== 0) return
 			this.startX = e.touches[0].clientX
-			this.query.select(".touch-control-box").boundingClientRect()
-			this.query.select(".touch-control-icon").boundingClientRect()
-			this.query.exec((res) => {
-				this.max = res[1].width - res[2].width
+			const query = wx.createSelectorQuery().in(this)
+			query.select(".touch-control-box").boundingClientRect()
+			query.select(".touch-control-icon").boundingClientRect()
+			query.exec((res) => {
+				this.max = res[0].width - res[1].width
 			})
 		},
 		touchmove(e) {
-			if (!this.data.parent.openBluetoothAdapter || this.data.parent.user.state !== 0) return
+			if (this.data.parent.user.state !== 0) return
 			let translateX = e.touches[0].clientX - this.startX
 			this.setData({
 				translateX: Math.max(Math.min(translateX, this.max), 0)
 			})
 		},
-		sleep(time) {
-			return new Promise(reslove => {
-				setTimeout(() => reslove(), time)
-			})
-		},
 		async touchend() {
-			if (!this.data.parent.openBluetoothAdapter || this.data.parent.user.state !== 0) return
+			if (this.data.parent.user.state !== 0) return
 			if (this.data.translateX > this.max / 2) {
 				this.setData({
 					isopening: true
 				})
-				const [result] = await Promise.all([writePromise(0x03, [1, 0, 0, 0]), this.sleep(1000)])
+				const [result] = await Promise.all([writePromise(0x03, [1, 0, 0, 0]), sleep(1000)])
 
 				if (result) {
 					this.triggerEvent("update", {
@@ -190,13 +170,13 @@ Component({
 				isopening: false
 			})
 		},
-		scanCode() {
-			if (!this.data.parent.openBluetoothAdapter) return
+		async scanCode() {
+			await openBluetooth()
 			wx.scanCode({
 				scanType: ['qrCode'],
 				success: res => {
 					log("qrcode", res)
-					const [deviceId, name, pinCode] = res.result.split(",")
+					const [name, pinCode] = res.result.split(",")
 					this.triggerEvent("update", {
 						dialog: {
 							type: "scanCode",
@@ -227,12 +207,18 @@ Component({
 				mask: true,
 				title: '正在连接',
 			})
-			if (this.data.parent.user.deviceId) await this.closeBLEConnection()
 			log(deviceId, 'deviceId')
+			try {
+				await wx.closeBLEConnection({
+					deviceId: this.data.parent.device.deviceId
+				})
+			} catch (error) {
+				log(error)
+			}
 			wx.createBLEConnection({
 				deviceId,
 				timeout: 200,
-				success: () => {
+				success: async () => {
 					this.createBLEConnectionCallback(deviceId, name)
 				},
 				fail: (res) => {
@@ -254,17 +240,6 @@ Component({
 			// wx.onBLEConnectionStateChange((res) => {
 			// 	log(res, "onBLEConnectionStateChange")
 			// })
-		},
-		async closeBLEConnection() {
-			try {
-				await wx.closeBLEConnection({
-					deviceId: this.data.parent.device.deviceId
-				})
-			} catch (error) {}
-			clearTimeout(this.timer)
-			this.triggerEvent("update", {
-				user: {}
-			})
 		},
 		getBLEDeviceServices(deviceId, name) {
 			wx.getBLEDeviceServices({
@@ -321,7 +296,7 @@ Component({
 						name
 					}
 					this.triggerEvent("update", {
-						device
+						device,
 					})
 					setDevice(device)
 					this.getDeviceRSSI(deviceId)
@@ -335,7 +310,10 @@ Component({
 						}
 					})
 					wx.hideLoading()
-					this.triggerEvent("update", "getstate")
+					this.triggerEvent("update", {
+						isfirst: true,
+						state: true
+					})
 				},
 				fail: (res) => {
 					wx.hideLoading()
@@ -358,13 +336,14 @@ Component({
 				}
 			})
 		},
-		async getDeviceRSSI(deviceId) {
+		async getDeviceRSSI(deviceId, callback) {
 			clearTimeout(this.timer)
 			let result = await wx.getBLEDeviceRSSI({
 				deviceId,
 			})
 			let RSSI = Math.min(-30, Math.max(-100, result.RSSI)) + 100
 			let dbmRate = Math.ceil(RSSI / 14)
+			if (callback) callback(dbmRate)
 			this.ctx.clearRect(2, 2, 50, 10)
 			this.ctx.fillStyle = "#ffffff50"
 			for (let i = 0; i < 5; i++) this.ctx.fillRect(i * 10 + 3, 3, 8, 8)
@@ -380,8 +359,10 @@ Component({
 			this.timer = setTimeout(() => this.getDeviceRSSI(deviceId), 500);
 		},
 		getState() {
-			if (!this.data.parent.openBluetoothAdapter || !this.data.parent.user.deviceId) return
-			this.triggerEvent("update", "getstate")
+			if (!this.data.parent.user.deviceId) return
+			this.triggerEvent("update", {
+				state: true
+			})
 		},
 	}
 })

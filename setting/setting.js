@@ -28,7 +28,7 @@ Component({
 			})
 		},
 		update(e) {
-			if (e.detail === "getstate") {
+			if (e.detail?.state) {
 				this.setData({
 					page: "vehicle"
 				})

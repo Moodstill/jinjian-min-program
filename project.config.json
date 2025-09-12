@@ -4,7 +4,9 @@
 	},
 	"setting": {
 		"minified": true,
-		"condition": true
+		"condition": true,
+		"enhance": true,
+		"es6": true
 	},
 	"compileType": "miniprogram",
 	"projectArchitecture": "multiPlatform"

@@ -175,8 +175,9 @@
 }
 
 .section_8 {
-	margin: 272rpx 8rpx 0;
+	margin: 272rpx 8rpx 20rpx;
 	padding: 40rpx 0 28rpx;
+	height: 610rpx;
 	background-color: #7e99be;
 	border-radius: 52rpx;
 }

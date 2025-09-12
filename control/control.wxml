@@ -1,5 +1,5 @@
 <view class="flex-col page">
-	<view class="flex-col group {{parent.openBluetoothAdapter?'':'disabled'}}">
+	<view class="flex-col group">
 		<view class="flex-col group_3">
 			<view class="flex-row justify-between items-center self-stretch group_4">
 				<view class="flex-row items-end" bind:tap="remark">
@@ -8,7 +8,7 @@
 				</view>
 			</view>
 			<text class="self-start font text_2">设备蓝牙MAC：{{parent.device.deviceId||"00:00:00:00:00:00"}}</text>
-			<text class="self-start font text_3">手机蓝牙MAC：{{parent.user.deviceId||"00:00:00:00:00:00"}}</text>
+			<text class="self-start font text_3">手机蓝牙MAC：{{parent.myDeviceId||"00:00:00:00:00:00"}}</text>
 			<view class="flex-row justify-between">
 				<view class="flex-col" style="gap:20rpx;margin-top:30rpx;">
 					<view class="flex-row justify-start items-center btn">
@@ -37,15 +37,15 @@
 					</view>
 				</view>
 				<view class="flex-col" style="gap:20rpx">
-					<view class="flex-row items-center section_7 btn" bind:tap="findBuletooth">
+					<view class="flex-row items-center section_7" bind:tap="findBuletooth">
 						<text class="font_2 text_4">{{parent.user.deviceId?"断开":"蓝牙"}}连接</text>
 						<image class="ml-10 shrink-0 image_6" src="/images/link.png" />
 					</view>
-					<view class="flex-row items-center section_7 btn" bind:tap="scanCode">
+					<view class="flex-row items-center section_7" bind:tap="scanCode">
 						<text class="font_2 text_4">蓝牙配对</text>
 						<image class="ml-10 shrink-0 image_6" src="/images/61a725837d2bb3ad30a14275613d7fe7.png" />
 					</view>
-					<view class="{{(!parent.openBluetoothAdapter || !parent.user.deviceId)?'disabled':''}}">
+					<view class="{{!parent.user.deviceId?'disabled':''}}">
 						<view class="flex-row items-center section_7 btn" bind:tap="getState">
 							<text class="font_2 text_7">状态刷新</text>
 							<image class="shrink-0 image_7 ml-19" src="/images/ef1ab995f407b7bbc2eb65fde9b5333d.png" />
@@ -54,7 +54,10 @@
 				</view>
 			</view>
 		</view>
-		<view class="flex-col section_8 {{parent.user.state!==0?'disabled':''}}">
+		<view class="flex-col section_8 items-center justify-center" wx:if="{{parent.readStateIng}}">
+			<image class="loading" style="width: 100rpx;height: 100rpx;" src="/images/loading.png" />
+		</view>
+		<view class="flex-col section_8 {{parent.user.state!==0?'disabled':''}}" wx:else="">
 			<view class="flex-row equal-division">
 				<view class="flex-col items-center group_8 equal-division-item btn" bind:tap="control" data-control="{{[0,parent.setting.fortify?2:1,0,0]}}">
 					<view class="image-icon" style="background:{{parent.setting.fortify?'#0D7AFF':'#fff'}};">
