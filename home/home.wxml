@@ -1,25 +1,17 @@
 <view class="page">
 	<!-- <button bind:tap="createQrcode" style="margin-top: 40rpx;">aa</button> -->
-	<view class="page-box {{ data.user.deviceId&& data.user.state===0?'scroll':''}}">
+	<view class="{{ data.user.deviceId&& data.user.state===0?'scroll':''}}">
 		<control id="device-control" parent="{{data}}" bind:update="update" wx:if="{{page==='control'}}" />
 		<setting parent="{{data}}" wx:else bind:update="update" />
 	</view>
-	<view class="flex-row justify-center group_9" wx:if="{{ data.user.deviceId && data.user.state===0}}">
-		<view class="{{page==='control'?'active':''}}" bind:tap="switchTab" data-page="control">
-			<image src="/images/7.png" wx:if="{{page==='control'}}" alt="" />
-			<image src="/images/6.png" wx:else="" alt="" />
-			<view class="flex-row justify-center items-center">
-				<image src="{{'/images/control'+(page==='control'?'-active':'')+'.png'}}" />
-				<text>控制</text>
-			</view>
+	<view class="flex-row justify-center group_9" wx:if="{{data.user.deviceId && data.user.state===0}}">
+		<view class="flex-col justify-center items-center {{page==='control'?'active':''}}" bind:tap="switchTab" data-page="control">
+			<image src="{{'/images/control'+(page==='control'?'-active':'')+'.png'}}" />
+			<text>控制</text>
 		</view>
-		<view class="flex-row justify-center items-center {{page==='setting'?'active':''}}" bind:tap="switchTab" data-page="setting">
-			<image src="/images/5.png" wx:if="{{page==='setting'}}" alt="" />
-			<image src="/images/8.png" wx:else="" alt="" />
-			<view class="flex-row justify-center items-center">
-				<image src="{{'/images/setting'+(page==='setting'?'-active':'')+'.png'}}" />
-				<text>设置</text>
-			</view>
+		<view class="flex-col justify-center items-center {{page==='setting'?'active':''}}" bind:tap="switchTab" data-page="setting">
+			<image src="{{'/images/setting'+(page==='setting'?'-active':'')+'.png'}}" />
+			<text>设置</text>
 		</view>
 	</view>
 </view>
@@ -32,7 +24,7 @@
 		<view class="dialog-hd" wx:if="{{data.dialog.type==='mark'}}">设置备注</view>
 		<view class="dialog-hd" wx:elif="{{data.dialog.type==='loading'}}">{{data.dialog.title}}</view>
 		<view class="dialog-hd" wx:elif="{{data.dialog.type==='find'}}">查询设备</view>
-		<view class="dialog-hd" wx:elif="{{data.dialog.type==='scanCode'}}">连接蓝牙</view>
+		<view class="dialog-hd" wx:elif="{{data.dialog.type==='pair'}}">连接蓝牙</view>
 		<view class="dialog-hd flex-row items-center justify-between" wx:elif="{{data.dialog.type==='help'}}">{{data.dialog.title}}
 			<image src="/images/help.png" />
 		</view>
@@ -42,9 +34,10 @@
 				<view wx:if="{{!devices.length}}">正在查询设备...</view>
 				<view wx:else="">
 					<view class="device-item flex-row items-center" wx:for="{{devices}}" wx:for-item="item" wx:for-index="index" bind:tap="createBLEConnectionEvent" data-index="{{index}}" wx:key="index">
-						<view>
+						<image src="/images/Vector.png" mode="" />
+						<view class="flex-col">
 							<text>{{item.name || item.localName || ""}}</text>
-							<text style="font-size: 20rpx;">( {{item.deviceId}} )</text>
+							<text style="font-size: 20rpx;">蓝牙MAC地址: {{item.deviceId}}</text>
 						</view>
 						<text class="prevDeviceId" wx:if="{{prevDeviceId===item.deviceId}}">上次连接</text>
 					</view>
@@ -64,13 +57,10 @@
 				<image src="/images/loading.png" class="loading" style="width: 100rpx;height: 100rpx;" />
 			</view>
 		</view>
-		<view class="dialog-bd" wx:elif="{{data.dialog.type==='scanCode'}}">
+		<view class="dialog-bd" wx:elif="{{data.dialog.type==='pair'}}">
 			<view class="dialog-input">
-				<text wx:if="{{data.dialog.type==='pincode'}}">蓝牙配对码</text>
 				<view>
-					<view class="flex-row items-center justify-center">
-						<text wx:for="{{data.dialog.inputValue}}" wx:key="index" wx:for-item="item">{{item}}</text>
-					</view>
+					<input focus="{{data.dialog.type!=='help'}}" type="{{data.dialog.type==='mark'?'text':'number'}}" maxlength="{{data.dialog.type==='mark'?10:6}}" bindinput="setDialogInput" value="{{data.dialog.input}}" />
 				</view>
 			</view>
 		</view>
@@ -88,10 +78,8 @@
 		<view class="dialog-btn flex-row items-center justify-around">
 			<view class="flex-row items-center justify-center" wx:if="{{data.dialog.type==='image'}}" bind:tap="save">保存</view>
 			<view class="flex-row items-center justify-center" wx:else="" bind:tap="afterleave">取消</view>
-			<!-- <view class="flex-row item-center justify-center" wx:if="{{data.dialog.type==='pincode'}}" bind:tap="copy" data-value="{{data.dialog.input}}">复制</view> -->
-			<view class="flex-row items-center justify-center" wx:if="{{data.dialog.type==='scanCode'}}" bind:tap="copyandlink">复制并连接</view>
-			<view class="flex-row items-center justify-center" wx:elif="{{data.dialog.type==='image'}}" bind:tap="shareQrcode">分享</view>
-			<view class="flex-row items-center justify-center" wx:elif="{{data.dialog.type==='pincode' || data.dialog.type==='mark'}}" bind:tap="sure">确认</view>
+			<view class="flex-row items-center justify-center" wx:if="{{data.dialog.type==='image'}}" bind:tap="shareQrcode">分享</view>
+			<view class="flex-row items-center justify-center" wx:elif="{{data.dialog.type==='pincode'||data.dialog.type==='pair' || data.dialog.type==='mark'}}" bind:tap="sure">确认</view>
 		</view>
 	</view>
 </page-container>

@@ -17,18 +17,14 @@ Page({
 	 * 页面的初始数据
 	 */
 	data: {
+		// page: "setting",
 		page: "control",
 		devices: [],
 		data: {
-			// user: {
-			// 	deviceId: "22",
-			// 	state: 0
-			// },
 			myDeviceId: "",
 			user: {},
 			devices: [],
 			userMap: {},
-			setting: {},
 			device: {
 				dbmRate: 0,
 			},
@@ -55,13 +51,15 @@ Page({
 	 * 生命周期函数--监听页面加载
 	 */
 	async onLoad(options) {
+		this.prevDeviceId = wx.getStorageSync('prevDeviceId')
 		const windowInfo = wx.getWindowInfo()
 		const dpr = windowInfo.windowWidth / 375
 		const width = Math.floor(300 * dpr)
 		const height = Math.floor(300 * dpr)
 		this.setData({
 			width,
-			height
+			height,
+			prevDeviceId: this.prevDeviceId
 		})
 		const devices = wx.getStorageSync('devices') || []
 		const userMap = wx.getStorageSync('userMap') || {}
@@ -70,6 +68,37 @@ Page({
 			devices,
 			userMap,
 			myDeviceId
+		})
+		on("pair", (status) => {
+			log("pair", status)
+			if (status[0] === 0) {
+				if (this.pin) return writePromise(0, hex2arrayBuffer(Number(this.pin).toString(16)))
+				if (this.isPair) return
+				this.isPair = true
+				this._setData({
+					dialog: {
+						type: "pair"
+					}
+				})
+				this.pairer = setTimeout(() => {
+					this._setData({
+						dialog: false
+					})
+					this.closeBLEConnection()
+				}, 20000)
+			} else if (status[1] === 1) {
+				this.isPair = false
+				clearTimeout(this.pairer)
+				this._setData({
+					dialog: false
+				})
+				this.readState()
+			} else {
+				wx.showToast({
+					title: '配对码错误',
+					icon: "error"
+				})
+			}
 		})
 		on("user", (user) => {
 			clearInterval(this.timerUser)
@@ -358,7 +387,7 @@ Page({
 			})
 		}).exec()
 	},
-	async readState(isfirst) {
+	async readState() {
 		this._setData({
 			readStateIng: true
 		})
@@ -367,7 +396,7 @@ Page({
 		clearInterval(this.timerUser)
 		this.count = 0
 		this.timerUser = setInterval(() => {
-			if (this.count > (isfirst ? 30 : 2)) {
+			if (this.count > 2) {
 				wx.showModal({
 					title: '提示',
 					content: '获取失败！请重新连接',
@@ -474,24 +503,6 @@ Page({
 		log(device, "createBLEConnection")
 	},
 	async createBLEConnection(deviceId, name) {
-		if (this.pin && !isIOS) {
-			try {
-				const isBluetoothDevicePaired = await wx.isBluetoothDevicePaired({
-					deviceId,
-				})
-				log(isBluetoothDevicePaired, "isBluetoothDevicePaired")
-				if (!isBluetoothDevicePaired?.isPaired) {
-					const makeBluetoothPair = await wx.makeBluetoothPair({
-						deviceId,
-						pin: btoa(this.pin),
-					})
-					log("makeBluetoothPair", makeBluetoothPair)
-					this.pin = false
-				}
-			} catch (error) {
-				log(error, "makeBluetoothPair")
-			}
-		}
 		this.qrcode = false
 		const deviceControl = this.selectComponent("#device-control")
 		deviceControl.createBLEConnection(deviceId, name)
@@ -501,6 +512,9 @@ Page({
 		if (e.detail === "closeBLEConnection") {
 			return this.closeBLEConnection(true)
 		}
+		if (e.detail?.pinCode) {
+			return this.pinCodeLink(e.detail)
+		}
 		if (e.detail === "buletooth") {
 			this.prevDeviceId = wx.getStorageSync('prevDeviceId')
 			const res = await this.getBluetoothDevices()
@@ -508,7 +522,7 @@ Page({
 			return this.startBluetoothDevicesDiscovery()
 		}
 		if (e.detail?.state) {
-			return this.readState(e.detail.isfirst)
+			return this.readState()
 		}
 		if (e.detail === "pincode") {
 			return this.getPinCode()
@@ -532,53 +546,41 @@ Page({
 		})
 		wx.hideKeyboard()
 	},
-	async copyandlink() {
-		const {
-			name,
-			pinCode
-		} = this.data.data.dialog
+	async pinCodeLink({
+		name,
+		pinCode
+	}) {
 		if (this.data.data.user.deviceId) {
 			await this.closeBLEConnection()
 			this._setData({
 				user: {}
 			})
 		}
-		wx.setClipboardData({
-			data: pinCode,
-			success: async () => {
-				wx.showLoading({
-					title: '正在查询',
-					mask: true
-				})
-				this.pin = pinCode
-				const result = await this.getBluetoothDevices(name)
-				if (result) {
-					if (result === true) {
-						this.timerOut = setTimeout(() => {
-							wx.hideLoading()
-							wx.showToast({
-								title: '未找到设备',
-								icon: "error"
-							})
-							this.stopBluetoothDevicesDiscovery()
-						}, 5000)
-						return this.startBluetoothDevicesDiscovery(name)
-					}
-					log(result, "getBluetoothDevices")
-					return this.createBLEConnection(result.deviceId, name)
-				}
-				wx.hideLoading()
-				wx.showToast({
-					title: '未找到设备',
-					icon: "error"
-				})
-			},
-			fail(res) {
-				wx.showToast({
-					title: res.errMsg,
-					icon: "error"
-				})
+		wx.showLoading({
+			title: '正在查询',
+			mask: true
+		})
+		this.pin = pinCode
+		const result = await this.getBluetoothDevices(name)
+		if (result) {
+			if (result === true) {
+				this.timerOut = setTimeout(() => {
+					wx.hideLoading()
+					wx.showToast({
+						title: '未找到设备',
+						icon: "error"
+					})
+					this.stopBluetoothDevicesDiscovery()
+				}, 5000)
+				return this.startBluetoothDevicesDiscovery(name)
 			}
+			log(result, "getBluetoothDevices")
+			return this.createBLEConnection(result.deviceId, name)
+		}
+		wx.hideLoading()
+		wx.showToast({
+			title: '未找到设备',
+			icon: "error"
 		})
 	},
 	async sure() {
@@ -599,6 +601,10 @@ Page({
 					title: '错误提示',
 					content: '请输入6位配对码',
 				})
+				if (type === "pair") {
+					await writePromise(0, hex2arrayBuffer(Number(input).toString(16)))
+					return
+				}
 				wx.showLoading({
 					mask: true,
 					title: '正在写入',

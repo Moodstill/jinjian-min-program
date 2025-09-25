@@ -86,9 +86,12 @@ const _this = {
 			_this.log(Array.from(uint8Array).map(v => v.toString(16)).join(" "))
 			let result, _thisCallback
 			switch (uint8Array[1]) {
+				case 0:
+					result = Array.from(uint8Array).slice(2)
+					_thisCallback = _this.callbacks.pair
+					break;
 				case 0xa2:
 					result = Array.from(uint8Array).slice(3)
-					_thisCallback = _this.callbacks.pincode
 					_thisCallback = _this.callbacks.writeSetting
 					break;
 				case 1:

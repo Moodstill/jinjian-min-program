@@ -43,10 +43,10 @@ Component({
 					canvas.width = 54 * dpr
 					canvas.height = 14 * dpr
 					this.ctx.scale(dpr, dpr)
-					this.ctx.strokeStyle = "#fff"
+					this.ctx.strokeStyle = "#000"
 					this.ctx.lineWidth = 1
 					this.ctx.strokeRect(1, 1, 52, 12)
-					this.ctx.fillStyle = "#ffffff50"
+					this.ctx.fillStyle = "#00000050"
 					for (let i = 0; i < 5; i++) this.ctx.fillRect(i * 10 + 3, 3, 8, 8)
 					if (this.data.parent.user.deviceId) {
 						this.getDeviceRSSI(this.data.parent.device.deviceId)
@@ -178,12 +178,8 @@ Component({
 					log("qrcode", res)
 					const [name, pinCode] = res.result.split(",")
 					this.triggerEvent("update", {
-						dialog: {
-							type: "scanCode",
-							name,
-							pinCode,
-							inputValue: pinCode.split("")
-						}
+						name,
+						pinCode
 					})
 				}
 			})
@@ -298,6 +294,9 @@ Component({
 					this.triggerEvent("update", {
 						device,
 					})
+					this.triggerEvent("update", {
+						state: true
+					})
 					setDevice(device)
 					this.getDeviceRSSI(deviceId)
 					wx.notifyBLECharacteristicValueChange({
@@ -310,10 +309,6 @@ Component({
 						}
 					})
 					wx.hideLoading()
-					this.triggerEvent("update", {
-						isfirst: true,
-						state: true
-					})
 				},
 				fail: (res) => {
 					wx.hideLoading()
@@ -345,7 +340,7 @@ Component({
 			let dbmRate = Math.ceil(RSSI / 14)
 			if (callback) callback(dbmRate)
 			this.ctx.clearRect(2, 2, 50, 10)
-			this.ctx.fillStyle = "#ffffff50"
+			this.ctx.fillStyle = "#00000050"
 			for (let i = 0; i < 5; i++) this.ctx.fillRect(i * 10 + 3, 3, 8, 8)
 			this.ctx.fillStyle = dbmRate > 1 ? "orange" : (dbmRate > 3 ? "green" : (dbmRate === 0 ? "gray" : "red"))
 			for (let i = 0; i < dbmRate; i++) this.ctx.fillRect(i * 10 + 3, 3, 8, 8)

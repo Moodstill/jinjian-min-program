@@ -1,52 +1,30 @@
 .page {
-	background: linear-gradient(to bottom, #4E89D6, #FFFFFF);
-}
-
-.page-box {
-	height: 100vh;
-}
-
-.page-box.scroll {
-	height: calc(100vh - 172rpx);
-	overflow-y: auto;
+	background: linear-gradient(to bottom, #4E89D6, #d1e4fc);
+	background-attachment: fixed;
+	min-height: 100vh;
 }
 
 .group_9 {
-	padding: 30rpx 0;
-	height: 172rpx;
-	color: #0d79ff;
+	margin: 0 30rpx;
+	height: 188rpx;
+	background: #fff;
+	border-radius: 30rpx;
 }
 
 .group_9 view {
-	font-size: 40rpx;
-	position: relative;
-	height: 112rpx;
-	width: 346rpx;
+	font-size: 28rpx;
+	flex: 1;
+	line-height: 40rpx;
+	color: #000;
 }
 
-.group_9 view>view {
-	position: absolute;
-	top: 0;
-	left: 0;
-}
-
-.group_9 view>image {
-	height: 112rpx;
-	width: 346rpx;
-}
-
-.group_9 view>view>image {
-	width: 44rpx;
-	height: 44rpx;
-	margin-right: 20rpx;
+.group_9 image {
+	height: 40rpx;
+	width: 40rpx;
 }
 
 .group_9 view.active {
-	color: #fff;
-}
-
-.group_9 view.disabled {
-	opacity: .5;
+	color: #0d79ff;
 }
 
 .dialog {
@@ -57,10 +35,9 @@
 	transform: translate(-50%, -50%);
 	z-index: 1;
 	padding: 24rpx 34rpx;
-	background-color: #cecece;
+	background: linear-gradient(to right, #3f95ff, #c1d7f3);
 	border-radius: 39rpx;
-	box-shadow: 0rpx 0rpx 18rpx #000000;
-	border: solid 2rpx #ffffff80;
+	box-shadow: 0rpx 0rpx 8rpx #0000007a;
 }
 
 .dialog-hd {
@@ -165,24 +142,39 @@
 }
 
 .dialog-find .device-item {
-	margin-bottom: 10rpx;
-	border-radius: 10rpx;
+	margin-bottom: 24rpx;
+	border-radius: 50rpx;
 	background: #fff;
-	padding: 10rpx 20rpx;
+	padding: 10rpx 12rpx;
+	font-size: 32rpx;
+}
+
+.dialog-find .device-item text {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.dialog-find .device-item image {
+	width: 40rpx;
+	height: 32rpx;
+	margin-right: 20rpx;
+	margin-left: 10rpx;
 }
 
 .dialog-find .device-item .prevDeviceId {
 	margin-left: auto;
 	flex-shrink: 0;
-	color: rgb(16, 212, 16);
+	color: #0073FF;
 	font-size: 24rpx;
+	width: 124rpx;
+	line-height: 50rpx;
+	flex-shrink: 0;
+	background: #D0E5FF;
+	text-align: center;
+	border-radius: 25rpx;
 }
 
 .dialog-find .device-item>view {
-	width: calc(100% - 100rpx);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	word-break: break-all;
-	word-wrap: break-word;
+	width: calc(100% - 200rpx);
 }

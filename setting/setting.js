@@ -15,7 +15,8 @@ Component({
 	 * 组件的初始数据
 	 */
 	data: {
-		page: "vehicle"
+		page: "vehicle",
+		// page: "user",
 	},
 
 	/**

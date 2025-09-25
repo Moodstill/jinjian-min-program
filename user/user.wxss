@@ -142,10 +142,24 @@
 }
 
 .section_5 {
-	margin: 20rpx 18rpx 0 4rpx;
+	margin: 20rpx 0 0 4rpx;
 	padding: 12rpx 26rpx;
 	background-color: #ffffff;
 	border-radius: 20rpx;
+}
+
+.section_5>view:nth-child(1) {
+	position: relative;
+	width: 76rpx;
+	height: 76rpx;
+}
+
+.section_5>view:nth-child(1) image:nth-child(2) {
+	position: absolute;
+	width: 51rpx;
+	height: 51rpx;
+	top: -20rpx;
+	left: 45rpx;
 }
 
 .image_7 {
@@ -159,10 +173,12 @@
 	line-height: 27.7rpx;
 	color: #000000;
 }
-.font_4 image{
+
+.font_4 image {
 	width: 30rpx;
 	height: 30rpx;
 }
+
 .text_5 {
 	line-height: 27.96rpx;
 }
@@ -188,7 +204,6 @@
 }
 
 .list-item {
-	margin-right: 14rpx;
 	padding: 8rpx 24rpx;
 	background-color: #ffffff;
 	border-radius: 20rpx;
@@ -212,8 +227,6 @@
 
 .font_6 {
 	font-size: 24rpx;
-	font-family: Alibaba PuHuiTi;
-	line-height: 22.48rpx;
 	color: #ffffff;
 }
 
@@ -231,17 +244,17 @@
 }
 
 .text-wrapper_2 {
-	margin-left: 16rpx;
-	padding: 12rpx 0;
 	background-color: #0d79ff;
 	border-radius: 16rpx;
 	box-shadow: 0rpx 8rpx 8rpx #00000040;
 	width: 82rpx;
-	height: 46rpx;
+	line-height: 60rpx;
 }
 
 .text_8 {
-	line-height: 22.12rpx;
+	line-height: 30rpx;
+	font-size: 20rpx;
+	margin-left: 30rpx;
 }
 
 .equal-division {

@@ -23,6 +23,7 @@ page {
 		transform: rotate(360deg);
 	}
 }
+
 view,
 image,
 text {
@@ -530,4 +531,14 @@ text {
 
 .mt-100 {
 	margin-top: 200rpx;
+}
+
+.scroll {
+	height: calc(100vh - 188rpx);
+	overflow-y: auto;
+}
+
+.page-box {
+	min-height: calc(100vh - 188rpx);
+	padding: 0 20rpx;
 }

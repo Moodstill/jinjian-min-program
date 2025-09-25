@@ -109,11 +109,6 @@
 	padding-bottom: 12rpx;
 }
 
-.group_5 {
-	margin-top: 40rpx;
-	padding: 0 4rpx;
-}
-
 .section_5 {
 	padding: 32rpx 26rpx 32rpx 64rpx;
 	background-color: #ffffff;
@@ -144,7 +139,7 @@
 .section_6 {
 	margin-right: 14rpx;
 	margin-top: 20rpx;
-	padding: 0 64rpx 40rpx;
+	padding: 32rpx 26rpx 32rpx 64rpx;
 	background-color: #ffffff;
 	border-radius: 20rpx;
 }
@@ -156,14 +151,15 @@
 .section_7 {
 	margin: 0 12rpx;
 	background-color: #d9d9d9;
+	height: 56rpx;
 	border-radius: 60rpx;
 	color: #0d79ff;
+	flex: 1;
 }
 
 .font_3 {
 	font-size: 28rpx;
-	font-family: Alibaba PuHuiTi;
-	line-height: 25.82rpx;
+	line-height: 26rpx;
 	color: #0d79ff;
 }
 
@@ -176,6 +172,7 @@
 	border-radius: 60rpx;
 	width: 33.33%;
 	height: 56rpx;
+	font-size: 28rpx;
 }
 
 .text-wrapper.active {

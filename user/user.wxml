@@ -1,10 +1,13 @@
-<view class="flex-col">
+<view class="flex-col page-box">
 	<view class="flex-row items-baseline group_6 view">
 		<text class="font_2 text_4">车主/管理员</text>
 		<text class="font_3 ml-13">1/1</text>
 	</view>
 	<view class="flex-row items-center section_5">
-		<image class="image_7" src="/images/user2.png" />
+		<view>
+			<image class="image_7" src="/images/avatar0.png" />
+			<image src="/images/user.png" />
+		</view>
 		<view class="flex-col items-start flex-1 ml-19">
 			<text class="font_4 text_5" bind:tap="remark">{{userMap.selfname || userMap.self || identity.name || "车主" }}
 				<image src="/images/c519761d37adad7a6641ec6e8adf1c61.png" />
@@ -17,25 +20,19 @@
 		<text class="ml-14 font_3">{{bindUser.length}}</text>
 	</view>
 	<view class="flex-col list">
-		<view class="flex-row list-item mt-5" wx:for="{{bindUser}}" wx:for-item="item" wx:for-index="index" wx:key="index">
-			<image class="self-center image_7" src="/images/user.png" />
+		<view class="flex-row list-item mt-5 items-center" wx:for="{{bindUser}}" wx:for-item="item" wx:for-index="index" wx:key="index">
+			<image class="self-center image_7" src="/images/avatar{{index%10}}.png" />
 			<view class="flex-col group_7">
 				<view class="flex-row items-center self-stretch">
 					<view class="font_4 items-center flex-row" bind:tap="remark" data-index="{{index}}">
 						{{userMap[item.deviceId]||("用户"+(index+1))}}
-						<image src="/images/c519761d37adad7a6641ec6e8adf1c61.png" />
-					</view>
-					<view wx:if="{{item.state===0}}" class="ml-44 flex-col justify-start shrink-0 text-wrapper" bind:tap="setIdentity" data-index="{{index}}">
-						<text class="font_6 text_7">设为车主</text>
+						<text class="text_8" style="color: {{item.state===1?'red':'green'}};">{{item.state===0?"启用":"禁用"}}</text>
 					</view>
 				</view>
 				<text class="mt-10 self-start font_5">蓝牙MAC地址：{{item.deviceId}}</text>
 			</view>
-			<view style="margin-left:auto" class="flex-col justify-start items-center self-start relative text-wrapper_2" bind:tap="setDisable" data-index="{{index}}">
-				<text class="font_6 text_8">{{item.state===1?"启用":"禁用"}}</text>
-			</view>
-			<view class="flex-col justify-start items-center self-start text-wrapper_2" bind:tap="setUnBind" data-index="{{index}}">
-				<text class="font_6">解绑</text>
+			<view style="margin-left:auto" class="flex-row justify-center items-center text-wrapper_2" bind:tap="opear" data-index="{{index}}">
+				<text class="font_6">设置</text>
 			</view>
 		</view>
 	</view>

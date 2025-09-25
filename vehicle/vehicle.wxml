@@ -1,4 +1,4 @@
-<view class="flex-col group_5">
+<view class="flex-col page-box" style="padding-top: 40rpx;">
 	<view class="flex-row justify-between items-center section_5 view">
 		<view class="flex-row items-center">
 			<text class="font_2 text_4">感应解锁</text>
@@ -13,8 +13,8 @@
 		</view>
 		<switch checked="{{setting.silentAntiTheft}}" color="#0D7AFF" bindchange="silentAntiTheft" />
 	</view>
-	<view class="flex-col section_6">
-		<view class="flex-row items-center group_6">
+	<view class="flex-row section_6 items-center">
+		<view class="flex-row items-center group_6" style="margin-right: 20rpx;">
 			<text class="font_2">感应距离</text>
 			<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="2" src="/images/help.png" />
 		</view>
