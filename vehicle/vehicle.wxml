@@ -1,4 +1,4 @@
-<view class="flex-col page-box" style="padding-top: 40rpx;">
+<view class="flex-col" style="padding: 40rpx 30rpx 0;">
 	<view class="flex-row justify-between items-center section_5 view">
 		<view class="flex-row items-center">
 			<text class="font_2 text_4">感应解锁</text>
@@ -13,15 +13,22 @@
 		</view>
 		<switch checked="{{setting.silentAntiTheft}}" color="#0D7AFF" bindchange="silentAntiTheft" />
 	</view>
-	<view class="flex-row section_6 items-center">
+	<view class="flex-col section_6">
 		<view class="flex-row items-center group_6" style="margin-right: 20rpx;">
 			<text class="font_2">感应距离</text>
 			<image class="ml-8 shrink-0 image_8" bind:tap="viewHelp" data-index="2" src="/images/help.png" />
 		</view>
 		<view class="flex-row justify-between items-center section_7">
-			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===0?'active':''}}" bind:tap="unlockDistance" data-value="0"><text>近</text></view>
-			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===1?'active':''}}" bind:tap="unlockDistance" data-value="1"><text>中</text></view>
-			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===2?'active':''}}" bind:tap="unlockDistance" data-value="2"><text>远</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===0?'active':''}}" bind:tap="unlockDistance" data-value="0"><text>1</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===1?'active':''}}" bind:tap="unlockDistance" data-value="1"><text>2</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===2?'active':''}}" bind:tap="unlockDistance" data-value="2"><text>3</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===3?'active':''}}" bind:tap="unlockDistance" data-value="3"><text>4</text></view>
+			<view class="flex-col justify-center items-center text-wrapper {{setting.unlockDistance===4?'active':''}}" bind:tap="unlockDistance" data-value="4"><text>5</text></view>
+		</view>
+		<view class="flex-row justify-between items-center font_2" style="padding:0 50rpx">
+			<text>近</text>
+			<text>中</text>
+			<text>远</text>
 		</view>
 	</view>
 	<view class="flex-col section_8">
@@ -33,10 +40,10 @@
 			<switch checked="{{setting.autoFortify!==0}}" color="#0D7AFF" bindchange="autoFortify" />
 		</view>
 		<view wx:if="{{setting.autoFortify!==0}}">
-			<slider bindchange="autoFortify" activeColor="#0D7AFF" block-color="#0D7AFF" backgroundColor="#89B3E6" show-value="{{true}}" min="5" max="60" value="{{setting.autoFortify}}" />
+			<slider bindchange="autoFortify" activeColor="#0D7AFF" block-color="#0D7AFF" backgroundColor="#89B3E6" show-value="{{true}}" min="30" max="90" value="{{setting.autoFortify}}" />
 			<view class="flex-row justify-between group_8">
-				<text class="font_5">5秒</text>
-				<text class="font_5 text_10">60秒</text>
+				<text class="font_5">30秒</text>
+				<text class="font_5 text_10">90秒</text>
 			</view>
 		</view>
 	</view>
@@ -56,11 +63,11 @@
 			</view>
 		</view>
 	</view>
-	<view class="flex-row justify-center section_11" bind:tap="share" wx:if="{{user.identity===1}}">
+	<view class="flex-row justify-center section_11 items-center" bind:tap="share" wx:if="{{user.identity===1}}">
 		<image class="image_10" src="/images/3.png" />
 		<text class="font_6 text_18 ml-15">分享二维码</text>
 	</view>
-	<view class="flex-row justify-center section_11" bind:tap="pincode" wx:if="{{user.identity===1}}">
+	<view class="flex-row justify-center section_11 items-center" bind:tap="pincode" wx:if="{{user.identity===1}}">
 		<image class="image_11" src="/images/4.png" />
 		<text class="font_6 text_15 ml-15">修改配对码</text>
 	</view>

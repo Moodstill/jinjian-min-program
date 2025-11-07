@@ -10,7 +10,17 @@ Component({
 			value: {}
 		}
 	},
+	lifetimes: {
+		attached() {
 
+			const {
+				height,
+			} = wx.getMenuButtonBoundingClientRect()
+			this.setData({
+				height
+			})
+		}
+	},
 	/**
 	 * 组件的初始数据
 	 */

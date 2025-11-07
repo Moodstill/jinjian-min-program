@@ -3,12 +3,11 @@ const {
 	error,
 	hex2arrayBuffer,
 	writePromise,
-	sleep,
 	log,
 	on,
-	onBLECharacteristicValueChange,
 	openBluetooth,
 	isIOS,
+	sleep,
 } = require("../util")
 
 Page({
@@ -22,12 +21,15 @@ Page({
 		devices: [],
 		data: {
 			myDeviceId: "",
-			user: {},
+			user: {
+				// deviceId: "1",
+				// state: 0,
+				// identity: 1
+			},
 			devices: [],
 			userMap: {},
-			device: {
-				dbmRate: 0,
-			},
+			dbm: 0,
+			device: {},
 			setting: {
 				unlockDistance: 0,
 				autoClose: 0,
@@ -54,12 +56,16 @@ Page({
 		this.prevDeviceId = wx.getStorageSync('prevDeviceId')
 		const windowInfo = wx.getWindowInfo()
 		const dpr = windowInfo.windowWidth / 375
+		const {
+			top,
+		} = wx.getMenuButtonBoundingClientRect()
 		const width = Math.floor(300 * dpr)
 		const height = Math.floor(300 * dpr)
 		this.setData({
 			width,
 			height,
-			prevDeviceId: this.prevDeviceId
+			prevDeviceId: this.prevDeviceId,
+			statusBarHeight: top
 		})
 		const devices = wx.getStorageSync('devices') || []
 		const userMap = wx.getStorageSync('userMap') || {}
@@ -71,33 +77,48 @@ Page({
 		})
 		on("pair", (status) => {
 			log("pair", status)
-			if (status[0] === 0) {
-				if (this.pin) return writePromise(0, hex2arrayBuffer(Number(this.pin).toString(16)))
-				if (this.isPair) return
-				this.isPair = true
-				this._setData({
-					dialog: {
-						type: "pair"
-					}
-				})
-				this.pairer = setTimeout(() => {
+			switch (status[0]) {
+				case 0:
+					if (this.pin) return writePromise(0, hex2arrayBuffer(Number(this.pin).toString(16)))
+					if (this.isPair) return
+					this.isPair = true
+					this._setData({
+						dialog: {
+							type: "pair"
+						}
+					})
+					this.pairer = setTimeout(() => {
+						this._setData({
+							dialog: false
+						})
+						this.closeBLEConnection()
+					}, 20000)
+					break;
+				case 1:
+					this.isPair = false
+					clearTimeout(this.pairer)
 					this._setData({
 						dialog: false
 					})
-					this.closeBLEConnection()
-				}, 20000)
-			} else if (status[1] === 1) {
-				this.isPair = false
-				clearTimeout(this.pairer)
-				this._setData({
-					dialog: false
-				})
+					break;
+				case 3:
+				case 2:
+					wx.showToast({
+						title: status[0] === 3 ? '账户已满' : '配对码错误',
+						icon: "error"
+					})
+					break
+				default:
+					break;
+			}
+		})
+		on("heart", (dbm) => {
+			this._setData({
+				dbm: -dbm
+			})
+			if (!this.userInfo) {
+				this.userInfo = true
 				this.readState()
-			} else {
-				wx.showToast({
-					title: '配对码错误',
-					icon: "error"
-				})
 			}
 		})
 		on("user", (user) => {
@@ -118,7 +139,6 @@ Page({
 			writePromise(1, [])
 		})
 		await openBluetooth()
-		onBLECharacteristicValueChange()
 		if (devices.length) {
 			const {
 				deviceId,
@@ -165,31 +185,30 @@ Page({
 			await wx.closeBLEConnection({
 				deviceId: this.data.data.device.deviceId
 			})
-			if (isCloseBluetooth && isIOS) {
-				return new Promise(reslove => {
-					wx.showModal({
-						title: '提示',
-						content: '请前往系统设置关闭蓝牙连接',
-						complete: (res) => {
-							if (res.cancel) {
-
-							}
-
-							if (res.confirm) {
-
-							}
-							reslove()
-						}
-					})
-				})
-			}
 		} catch (error) {
 			log(error)
 		}
-		this.selectComponent("#device-control").closeBLEConnection()
+		// this.selectComponent("#device-control").closeBLEConnection()
 		this._setData({
-			user: {}
+			user: {},
+			dbm: "--"
 		})
+		if (isCloseBluetooth && isIOS) {
+			wx.showModal({
+				title: '提示',
+				content: '请前往系统设置关闭蓝牙连接',
+				complete: (res) => {
+					if (res.cancel) {
+
+					}
+
+					if (res.confirm) {
+
+					}
+					reslove()
+				}
+			})
+		}
 	},
 	async createQrcodeBtn() {
 		wx.showActionSheet({
@@ -267,12 +286,12 @@ Page({
 					width,
 					height,
 					padding: 20,
-					background: "#cecece",
+					background: "#ffffff",
 					canvas: qrt,
 					text: this.text,
 				})
 				const ctx = qr.getContext("2d")
-				ctx.fillStyle = "#cecece"
+				ctx.fillStyle = "#ffffff"
 				ctx.fillRect(0, 0, width, height * 1.2)
 				let image = qrt.createImage()
 				await new Promise(reslove2 => {
@@ -391,12 +410,10 @@ Page({
 		this._setData({
 			readStateIng: true
 		})
-		await sleep(500)
-		writePromise(2, [], true)
 		clearInterval(this.timerUser)
 		this.count = 0
 		this.timerUser = setInterval(() => {
-			if (this.count > 2) {
+			if (this.count > 10) {
 				wx.showModal({
 					title: '提示',
 					content: '获取失败！请重新连接',
@@ -424,6 +441,7 @@ Page({
 			this.count++
 			writePromise(2, [], true)
 		}, 1000)
+		writePromise(2, [], true)
 		// await writePromise(1, [])
 	},
 	startBluetoothDevicesDiscovery(name) {
@@ -467,7 +485,7 @@ Page({
 					this.stopBluetoothDevicesDiscovery()
 					return this.createBLEConnection(device.deviceId, name)
 				}
-				if (!device.name.includes("KEY-JINJIAN")) return
+				if (!device.name.includes("JJ-")) return
 				const idx = foundDevices.findIndex(v => v.deviceId === device.deviceId)
 				if (idx === -1) {
 					foundDevices.push(device)
@@ -481,14 +499,13 @@ Page({
 		})
 	},
 	async getBluetoothDevices(name) {
-		await openBluetooth()
 		try {
 			const result = await wx.getBluetoothDevices()
 			log(result)
 			if (result && result.devices) {
 				if (name) return result.devices.find(val => val.name === name) || true
 				this.setData({
-					devices: result.devices.filter((val, index, array) => val.name.includes("KEY-JINJIAN") && array.findIndex(v => v.deviceId === val.deviceId) === index)
+					devices: result.devices.filter((val, index, array) => val.name.includes("JJ-") && array.findIndex(v => v.deviceId === val.deviceId) === index)
 				})
 			}
 			return true
@@ -503,6 +520,12 @@ Page({
 		log(device, "createBLEConnection")
 	},
 	async createBLEConnection(deviceId, name) {
+		let time = Date.now() - this.time
+		if (this.time && time < 1500) {
+			await sleep(time)
+		}
+		this.isPair = false
+		this.userInfo = false
 		this.qrcode = false
 		const deviceControl = this.selectComponent("#device-control")
 		deviceControl.createBLEConnection(deviceId, name)
@@ -516,6 +539,21 @@ Page({
 			return this.pinCodeLink(e.detail)
 		}
 		if (e.detail === "buletooth") {
+			this._setData({
+				dialog: {
+					type: "find"
+				}
+			})
+			if (this.data.data.device.deviceId) {
+				this.time = Date.now()
+				try {
+					await wx.closeBLEConnection({
+						deviceId: this.data.data.device.deviceId
+					})
+				} catch (error) {
+					log(error)
+				}
+			}
 			this.prevDeviceId = wx.getStorageSync('prevDeviceId')
 			const res = await this.getBluetoothDevices()
 			if (!res) return
@@ -534,6 +572,12 @@ Page({
 	},
 	afterleave() {
 		log("afterleave")
+		if (this.data.data.dialog.type === 'pair') {
+			this.isPair = false
+			if (!this.data.data.user.deviceId) {
+				this.closeBLEConnection()
+			}
+		}
 		if (this.data.data.dialog.type === 'find') {
 			wx.offBluetoothDeviceFound()
 			this.stopBluetoothDevicesDiscovery()
@@ -642,6 +686,7 @@ Page({
 	 */
 	onHide() {},
 	closeBluetoothAdapter() {
+		this.bluetoothAdapter = false
 		return wx.closeBluetoothAdapter()
 	},
 	/**

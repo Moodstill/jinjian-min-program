@@ -533,12 +533,7 @@ text {
 	margin-top: 200rpx;
 }
 
-.scroll {
-	height: calc(100vh - 188rpx);
-	overflow-y: auto;
-}
-
 .page-box {
-	min-height: calc(100vh - 188rpx);
+	min-height: 100%;
 	padding: 0 20rpx;
 }

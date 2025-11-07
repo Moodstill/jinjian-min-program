@@ -1,5 +1,6 @@
-let writePromiseCallback
 const _this = {
+	writePromiseCallback: {},
+	timerout: {},
 	device: {},
 	error: (res, event) => {
 		_this.log(res, event)
@@ -38,10 +39,10 @@ const _this = {
 	writePromise(code, data, nomsg) {
 		let buffer = _this.string2buffer(code, data)
 		return new Promise(reslove => {
-			writePromiseCallback = reslove
+			_this.writePromiseCallback[code] = reslove
 			_this.writeBLECharacteristicValue(buffer)
-			_this.timerout = setTimeout(() => {
-				clearTimeout(_this.timerout)
+			_this.timerout[code] = setTimeout(() => {
+				clearTimeout(_this.timerout[code])
 				if (!nomsg) wx.showToast({
 					title: '操作超时',
 					icon: "error",
@@ -86,6 +87,10 @@ const _this = {
 			_this.log(Array.from(uint8Array).map(v => v.toString(16)).join(" "))
 			let result, _thisCallback
 			switch (uint8Array[1]) {
+				case 0xff:
+					result = Array.from(uint8Array).slice(3)[0]
+					_thisCallback = _this.callbacks.heart
+					break;
 				case 0:
 					result = Array.from(uint8Array).slice(2)
 					_thisCallback = _this.callbacks.pair
@@ -136,7 +141,7 @@ const _this = {
 						autoFortify: uint8Array[7],
 						open: uint8Array[8],
 						fortify: uint8Array[9],
-						voltage: parseInt(uint8Array[10].toString(16) + uint8Array[11].toString(16), 16) / 10,
+						voltage: (uint8Array[10] << 8 | uint8Array[11]) / 10,
 					}
 					_thisCallback = _this.callbacks.setting
 					break;
@@ -144,9 +149,9 @@ const _this = {
 					break;
 			}
 			if (_thisCallback) _thisCallback(result)
-			if (writePromiseCallback) writePromiseCallback(result)
-			clearTimeout(_this.timerout)
-			writePromiseCallback = null
+			if (_this.writePromiseCallback[uint8Array[1]]) _this.writePromiseCallback[uint8Array[1]](result)
+			clearTimeout(_this.timerout[uint8Array[1]])
+			_this.writePromiseCallback[uint8Array[1]] = null
 		})
 	},
 	log: (...arg) => {
@@ -165,6 +170,7 @@ const _this = {
 				scope: 'scope.bluetooth',
 				success: async () => {
 					await _this.openBluetoothAdapter()
+					_this.onBLECharacteristicValueChange()
 					reslove()
 				},
 				fail: (e) => {

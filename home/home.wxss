@@ -4,8 +4,19 @@
 	min-height: 100vh;
 }
 
+.page-main {
+	height: calc(100vh - 40rpx);
+	overflow-y: auto;
+}
+
+.page-main.scroll {
+	height: calc(100vh - 208rpx);
+	overflow-y: auto;
+	margin-bottom: 40rpx;
+}
+
 .group_9 {
-	margin: 0 30rpx;
+	margin: 0 20rpx;
 	height: 188rpx;
 	background: #fff;
 	border-radius: 30rpx;
@@ -38,6 +49,10 @@
 	background: linear-gradient(to right, #3f95ff, #c1d7f3);
 	border-radius: 39rpx;
 	box-shadow: 0rpx 0rpx 8rpx #0000007a;
+}
+
+.dialog.qr-img {
+	background: #fff;
 }
 
 .dialog-hd {

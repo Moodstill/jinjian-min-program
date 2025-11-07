@@ -17,7 +17,7 @@
 		<text class="font_2 text_6">用户状态：</text>
 		<text class="font_2 text_6" style="color:{{parent.user.state?'red':'green'}}">{{parent.user.state?"禁用":"启用"}}</text>
 	</view> -->
-	<view class="flex-col" style="margin-bottom: 40rpx;">
+	<view class="flex-col">
 		<view class="flex-row justify-evenly group_2 {{!parent.user.deviceId?' disabled':''}}">
 			<view class="flex-row items-center justify-center" bind:tap="scanCode">
 				<image class="shrink-0 image_6" src="/images/61a725837d2bb3ad30a14275613d7fe7.png" />
@@ -28,24 +28,24 @@
 				<text class="font_2">{{parent.user.deviceId?"断开":"蓝牙"}}连接</text>
 			</view>
 			<view class="flex-row items-center justify-center btn" bind:tap="getState">
-				<image class="shrink-0 image_6" src="/images/ef1ab995f407b7bbc2eb65fde9b5333d.png" />
+				<image class="shrink-0 image_6{{parent.readStateIng?' loading':''}}" src="/images/ef1ab995f407b7bbc2eb65fde9b5333d.png" />
 				<text class="font_2">状态刷新</text>
 			</view>
 		</view>
 		<view class="flex-row items-center group_3" style="margin-bottom: 30rpx;">
 			<view class="flex-row items-center">
-				<image src="/images/l.png" class="shrink-0" style="width: 64rpx;height: 64rpx;" />
-				<text class="shrink-0" style="font-size: 30rpx;margin:0 20rpx">蓝牙</text>
+				<image src="/images/l.png" class="shrink-0" style="width: 64rpx;height: 64rpx;margin-right: 20rpx;" />
+				<!-- <text class="shrink-0" style="font-size: 30rpx;margin:0 20rpx">蓝牙</text> -->
 				<view class="flex-col justify-evenly" style="flex: 1;">
 					<view class=" flex-row items-center btn" style="margin-bottom: 20rpx;">
 						<text style="color:{{parent.user.deviceId?'#00C907':'#ccc'}} ;">{{parent.user.deviceId?"已":"未"}}连接</text>
-						<view class="ml-4 shrink-0 section_5" style="margin-left:80rpx; background: {{parent.user.deviceId?'#00FF0D':'#ccc'}};"></view>
+						<view class="shrink-0 section_5" style="margin:0 80rpx; background: {{parent.user.deviceId?'#00FF0D':'#ccc'}};"></view>
 					</view>
 					<view class="flex-row justify-start items-center btn">
 						<text>信号强度</text>
 						<canvas type="2d" id="dbm3" style="flex-shrink: 0; width:54px; height:14px;margin-left: 10rpx;"></canvas>
+						<view style="text-align: center;margin-left:20rpx;color: #0033FF;">{{parent.dbm||'--'}}dBm</view>
 					</view>
-					<view style="text-align: center;margin-left:100rpx;color: #0033FF;">{{parent.device.dbm||0}}dBm</view>
 				</view>
 			</view>
 			<view class="flex-col btn shrink-0 justify-evenly">
@@ -58,12 +58,12 @@
 				</view>
 			</view>
 		</view>
-		<view class="flex-col items-center justify-center" style="height: 494rpx;" wx:if="{{parent.readStateIng}}">
+		<!-- <view class="flex-col items-center justify-center" style="height: 494rpx;" wx:if="{{parent.readStateIng}}">
 			<image class="loading" style="width: 100rpx;height: 100rpx;" src="/images/loading.png" />
-		</view>
-		<view class="flex-col {{parent.user.state!==0?'disabled':''}}" wx:else="">
+		</view> -->
+		<view class="flex-col {{parent.user.state!==0?'disabled':''}}">
 			<view class="flex-row items-center justify-evenly" style="background: #fff;border-radius: 30rpx;height: 254rpx;">
-				<view class="flex-col items-center btn" bind:tap="control" data-control="{{[0,parent.setting.fortify?2:1,0,0]}}">
+				<view class="flex-col items-center btn {{parent.setting.open?'disabled':''}}" bind:tap="control" data-control="{{[0,parent.setting.fortify?2:1,0,0]}}">
 					<view class="image-icon" style="background:{{parent.setting.fortify?'#0D7AFF':'#fff'}};border-color: {{parent.setting.fortify?'#0D7AFF':'#000'}};">
 						<image class="image_8" src="/images/clock-active.png" wx:if="{{parent.setting.fortify}}" />
 						<image class="image_8" src="/images/clock.png" wx:else />
@@ -77,9 +77,9 @@
 					</view>
 					<text class="mt-10 text_8">寻车</text>
 				</view>
-				<view class="flex-col items-center btn" bind:tap="control" data-control="{{[0,0,parent.setting.site?2:1,0]}}">
-					<view class="image-icon" style="background:{{parent.setting.site?'#0D7AFF':'#fff'}};border-color: {{parent.setting.site?'#0D7AFF':'#000'}};">
-						<image class="image_8" src="/images/site-active.png" wx:if="{{parent.setting.site}}" />
+				<view class="flex-col items-center btn" bind:tap="control" data-control="{{[0,0,1,0]}}">
+					<view class="image-icon" style="background:{{closeTouch==='site'?'#0D7AFF':'#fff'}};border-color: {{closeTouch==='site'?'#0D7AFF':'#000'}};">
+						<image class="image_8" src="/images/site-active.png" wx:if="{{closeTouch==='site'}}" />
 						<image class="image_8" src="/images/site.png" wx:else />
 					</view>
 					<text class="mt-10 text_8">座桶</text>

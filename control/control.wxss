@@ -21,7 +21,7 @@
 }
 
 .group_1 {
-	margin-top: 60rpx;
+	margin-bottom: 30rpx;
 }
 
 .text {
@@ -159,7 +159,8 @@
 	font-weight: bold;
 }
 
-.disabled .btn {
+.disabled .btn,
+.btn.disabled {
 	opacity: .5;
 }
 

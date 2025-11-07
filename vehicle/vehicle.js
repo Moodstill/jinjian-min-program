@@ -3,17 +3,17 @@ const {
 	log
 } = require("../util")
 const helpContent = [
-	`tip：canvas 标签默认宽度300px、高度150px
-	tip：同一页面中的 canvas-id 不可重复，如果使用一个已经出现过的 canvas-id，该 canvas 标签对应的画布将被隐藏并不再正常工作
-	tip：请注意原生组件使用限制
-	tip：开发者工具中默认关闭了 GPU 硬件加速，可在开发者工具的设置中开启“硬件加速”提高 WebGL 的渲染性能
-	tip: WebGL 支持通过 getContext('webgl', { alpha: true }) 获取透明背景的画布
-	tip: WebGL 暂不支持真机调试，建议使用真机预览
-	tip: Canvas 2D（新接口）需要显式设置画布宽高，默认：300*150，最大：1365*1365
-	bug: 避免设置过大的宽高，在安卓下会有crash的问题
-	tip: iOS 暂不支持 pointer-events
-	tip: 在 mac 或 windows 小程序下，若当前组件所在的页面或全局开启了 enablePassiveEvent 配置项，该内置组件可能会出现非预期表现（详情参考 enablePassiveEvent 文档）
-	tip: 鸿蒙 OS 下暂不支持外接纹理`
+	`1.在小程序中完成蓝牙配对连接后，请进入到手机系统设置中的蓝牙，检查配对连接情况，如果蓝牙是未连接的状态，请点击蓝牙连接。蓝牙连接成功后，即可开启感应解锁功能；
+	
+	2.手机连接蓝牙并靠近车辆进入解锁范围即可自动解锁，解锁时请尽减少手机与车辆之间的遮挡(感应解锁只是解除车辆的防盗状态，而不是直接上电)；
+	
+	3.车辆解锁后，按一下启动锁即可启动车辆，长按启动键2s左右即可关机，双击启动键即可打开鞍座；
+	
+	4.若解锁遇到问题，建议您尝试重新连接蓝牙，或尝试调节感应距离；`,
+	"开启后，车辆在防盗状态下检测到异常移动或震动时不会发出警报声。",
+	"可通过选择来调节感应靠近解锁的距离。车辆感应离开的距离无法设置。",
+	"开启后，当车辆已下电并且在等待时间内未上电，车辆将自动设防。可通过左右滑动来调节自动设防时间。",
+	"开启后，当车辆停稳并在等待时间内未行驶则自动关机。可通过左右滑动来调节关机等待时间。"
 ]
 const _title = [
 	"感应解锁",
@@ -42,9 +42,7 @@ Component({
 	/**
 	 * 组件的初始数据
 	 */
-	data: {
-
-	},
+	data: {},
 
 	/**
 	 * 组件的方法列表
@@ -99,7 +97,7 @@ Component({
 			this.writeSetting("unlockDistance", Number(e.currentTarget.dataset.value))
 		},
 		autoFortify(e) {
-			let autoFortify = e.detail.value === true ? 5 : 0
+			let autoFortify = e.detail.value === true ? 30 : 0
 			if (typeof e.detail.value === 'number') autoFortify = e.detail.value
 			this.writeSetting("autoFortify", autoFortify)
 		},
